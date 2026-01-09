@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ServEase – Task 12: Moderate Disputes (Mobile)</title>
+<style>
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-m:12px; --radius-l:16px;
+    --space-s:8px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  .screen{
+    width:390px; min-height:844px; margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l); box-sizing:border-box;
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700;}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:8px 0;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .row{display:flex; gap:12px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea, select{
+    width:100%; border:1px solid var(--neutral-200); border-radius:12px; background:#fff; padding:8px 12px; box-sizing:border-box;
+  }
+  textarea{min-height:110px; resize:vertical;}
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:12px; padding:0 16px; font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+
+  .dispute-item{
+    border:1px solid var(--neutral-200); border-radius:16px; padding:12px; background:#fff;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .avatar{width:40px; height:40px; border-radius:20px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .small{font-size:12px; color:var(--neutral-500);}
+  .evidence-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .evidence-tile{
+    width:110px; height:110px; border:1px solid var(--neutral-200); border-radius:16px;
+    background:linear-gradient(135deg,#eff6ff,#e2e8f0);
+    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; text-align:center;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    display:inline-flex; align-items:center; height:36px; padding:0 16px;
+    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
+  .chat-bubble{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px; padding:12px;
+  }
+  .status{display:inline-flex; gap:6px; align-items:center; font-size:12px;}
+  .status.pending{color:var(--warning-500);}
+  .status.ok{color:var(--success-500);}
+</style>
+<script>
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  // Demo disputes
+  const DISPUTES = [
+    {
+      id:"DSP-10041",
+      title:"Refund requested – leak reappeared",
+      complainant:"User: Ana M.",
+      provider:"Provider: Andrei Pop – Plumbing",
+      date:"Nov 1, 2025",
+      policy:"Service redo / partial refund",
+      evidence:["Photo – pipe","Chat – repair","Invoice"]
+    },
+    {
+      id:"DSP-10042",
+      title:"Extra time billed dispute",
+      complainant:"User: Casa Verde",
+      provider:"Provider: Dan Electric SRL",
+      date:"Oct 30, 2025",
+      policy:"Fair billing"
+    }
+  ];
+
+  const State = {
+    selectedId: null,
+    decision: null // "refund","provider-wins","redo","split"
+  };
+
+  function renderCases(){
+    const list = document.getElementById('casesList');
+    if(!list) return;
+    list.innerHTML = '';
+    DISPUTES.forEach(d=>{
+      const div = document.createElement('div');
+      div.className = 'dispute-item';
+      div.innerHTML = `
+        <div class="avatar" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="row" style="justify-content:space-between;">
+            <div class="col" style="gap:2px;">
+              <div><b>${d.title}</b></div>
+              <div class="small">${d.complainant} vs ${d.provider}</div>
+              <div class="small">Opened: ${d.date}</div>
+            </div>
+            <a class="btn ghost" data-id="${d.id}">Open</a>
+          </div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('a.btn.ghost').forEach(a=>{
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        const id = a.getAttribute('data-id');
+        State.selectedId = id;
+        fillClaim();
+        go('02_Claim_Details');
+      });
+    });
+  }
+
+  function getSelected(){
+    return DISPUTES.find(d=>d.id===State.selectedId) || DISPUTES[0];
+  }
+
+  function fillClaim(){
+    const d = getSelected();
+    if(!d) return;
+    const cId = document.getElementById('claimId');
+    const cTitle = document.getElementById('claimTitle');
+    const cParties = document.getElementById('claimParties');
+    const cDate = document.getElementById('claimDate');
+    const cPolicy = document.getElementById('claimPolicy');
+    if(cId) cId.textContent = d.id;
+    if(cTitle) cTitle.textContent = d.title;
+    if(cParties) cParties.textContent = `${d.complainant} • ${d.provider}`;
+    if(cDate) cDate.textContent = d.date;
+    if(cPolicy) cPolicy.textContent = d.policy || '—';
+
+    // evidence
+    const ev = document.getElementById('evidenceGrid');
+    if(ev){
+      ev.innerHTML = '';
+      (d.evidence || []).forEach(e=>{
+        const t = document.createElement('div');
+        t.className = 'evidence-tile';
+        t.innerHTML = `<div style="font-size:32px;">📄</div><div class="body" style="font-size:12px;">${e}</div>`;
+        ev.appendChild(t);
+      });
+      if(!(d.evidence || []).length){
+        ev.innerHTML = '<div class="body muted">No files attached.</div>';
+      }
+    }
+  }
+
+  function chooseDecision(el, val){
+    const group = document.getElementById('decChips');
+    if(group){
+      group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    }
+    el.classList.add('active');
+    State.decision = val;
+  }
+
+  function submitResolution(){
+    const outId = document.getElementById('resCaseId');
+    const outRes = document.getElementById('resDecision');
+    const d = getSelected();
+    if(outId) outId.textContent = d ? d.id : '—';
+    const map = {
+      "refund":"Refund to client",
+      "provider-wins":"Provider decision upheld",
+      "redo":"Redo service",
+      "split":"Split responsibility"
+    };
+    if(outRes) outRes.textContent = map[State.decision] || '—';
+    go('05_Notify_Users');
+  }
+
+  window.addEventListener('load', renderCases);
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_ModerateDisputes">
+  <div class="title">Moderate Disputes</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Resolve complaints fairly and keep the platform’s reputation healthy.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: Admin environment</span>
+      <span class="badge">Starting: Open dispute cases</span>
+      <span class="badge">Evidence + messages</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body" style="padding-left:20px;">
+      <li>Read claim details & materials</li>
+      <li>Contact both parties</li>
+      <li>Evaluate evidence & policy</li>
+      <li>Decide resolution & update</li>
+      <li>Notify users of the decision</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Open_Cases" class="btn primary" onclick="return go('01_Open_Cases')">Open dispute cases</a>
+  </div>
+</section>
+
+<!-- 01 Open cases list -->
+<section class="screen" id="01_Open_Cases">
+  <div class="title">Open dispute cases</div>
+  <div class="body muted">Pick a case to moderate.</div>
+
+  <div id="casesList" class="col">
+    <!-- populated by JS -->
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_ModerateDisputes" class="btn secondary" onclick="return go('00_Context_ModerateDisputes')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Claim details & evidence -->
+<section class="screen" id="02_Claim_Details">
+  <div class="title">Claim details</div>
+
+  <div class="card">
+    <div class="label">Case ID</div>
+    <div class="body" id="claimId">—</div>
+    <div class="label" style="margin-top:8px;">Title</div>
+    <div class="body" id="claimTitle">—</div>
+    <div class="label" style="margin-top:8px;">Parties</div>
+    <div class="body" id="claimParties">—</div>
+    <div class="label" style="margin-top:8px;">Opened</div>
+    <div class="body muted" id="claimDate">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Supporting materials</div>
+    <div id="evidenceGrid" class="evidence-grid">
+      <!-- evidence tiles -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Policy to check</div>
+    <div class="body" id="claimPolicy">—</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Contact_Parties" class="btn primary" onclick="return go('03_Contact_Parties')">Contact parties</a>
+    <a href="#01_Open_Cases" class="btn secondary" onclick="return go('01_Open_Cases')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Contact both parties -->
+<section class="screen" id="03_Contact_Parties">
+  <div class="title">Contact parties</div>
+  <div class="body muted">Ask for clarifications, missing receipts, or context.</div>
+
+  <div class="card">
+    <div class="label">To: Complainant</div>
+    <div class="chat-bubble">
+      <b>Admin → Ana M.</b><br/>
+      Hello! Can you confirm the date the leak reappeared and share 1 more photo?
+    </div>
+    <textarea placeholder="Write a message to the complainant..."></textarea>
+  </div>
+
+  <div class="card">
+    <div class="label">To: Provider</div>
+    <div class="chat-bubble">
+      <b>Admin → Andrei Pop – Plumbing</b><br/>
+      Please confirm what work was done and whether a redo was proposed.
+    </div>
+    <textarea placeholder="Write a message to the provider..."></textarea>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Evaluate_Resolution" class="btn primary" onclick="return go('04_Evaluate_Resolution')">Evaluate & resolve</a>
+    <a href="#02_Claim_Details" class="btn secondary" onclick="return go('02_Claim_Details')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Evaluate evidence & decide -->
+<section class="screen" id="04_Evaluate_Resolution">
+  <div class="title">Evaluate & decide</div>
+  <div class="body muted">Match evidence against policy and pick an outcome.</div>
+
+  <div class="card">
+    <div class="label">Policy compliance checklist</div>
+    <div class="col">
+      <label class="row" style="align-items:flex-start;"><input type="checkbox" style="margin-top:4px;"/> <span class="body">Client reported within allowed time window.</span></label>
+      <label class="row" style="align-items:flex-start;"><input type="checkbox" style="margin-top:4px;"/> <span class="body">Provider’s completion proof is attached.</span></label>
+      <label class="row" style="align-items:flex-start;"><input type="checkbox" style="margin-top:4px;"/> <span class="body">Evidence shows issue persists.</span></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Resolution</div>
+    <div id="decChips" class="chips">
+      <span class="chip" onclick="chooseDecision(this,'refund')">Refund client</span>
+      <span class="chip" onclick="chooseDecision(this,'redo')">Ask provider to redo</span>
+      <span class="chip" onclick="chooseDecision(this,'provider-wins')">Provider wins</span>
+      <span class="chip" onclick="chooseDecision(this,'split')">Split responsibility</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Moderator note</div>
+    <textarea placeholder="E.g., Client reported within 24h; photo shows issue persists; approve partial refund."></textarea>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Notify_Users" class="btn primary" onclick="submitResolution(); return false;">Save & notify</a>
+    <a href="#03_Contact_Parties" class="btn secondary" onclick="return go('03_Contact_Parties')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Notify both users -->
+<section class="screen" id="05_Notify_Users">
+  <div class="title">Decision sent ✅</div>
+  <div class="body muted">We notified both the complainant and the provider.</div>
+
+  <div class="card">
+    <div class="label">Case</div>
+    <div class="body" id="resCaseId">—</div>
+    <div class="label" style="margin-top:8px;">Resolution</div>
+    <div class="body" id="resDecision">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Notifications</div>
+    <ul class="body" style="padding-left:20px;">
+      <li>In-app message to complainant</li>
+      <li>In-app message to provider</li>
+      <li>Case closed in system records</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="label">Status</div>
+    <div class="status ok">● Closed</div>
+    <div class="body muted">This improves the platform’s fairness score.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#01_Open_Cases" class="btn primary" onclick="return go('01_Open_Cases')">Back to open cases</a>
+    <a href="#00_Context_ModerateDisputes" class="btn secondary" onclick="return go('00_Context_ModerateDisputes')">Flow overview</a>
+  </div>
+</section>
+
+</body>
+</html>

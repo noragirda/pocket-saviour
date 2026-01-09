@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ServEase – Task 1: Power Outage Help (Mobile)</title>
+<style>
+  /* ===== Tokens (Soft Neutral) ===== */
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-s:8px; --radius-m:12px; --radius-l:16px;
+    --space-xs:4px; --space-s:8px; --space-sm:12px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  /* ===== Frame ===== */
+  .screen{
+    width:390px; min-height:844px; box-sizing:border-box;
+    margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:var(--space-s) 0;}
+  /* ===== Components ===== */
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:12px; padding:0 var(--space-l);
+    font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.danger{background:var(--error-500); color:#fff; border:1px solid var(--error-500);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+
+  .row{display:flex; gap:16px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea{
+    width:100%; border:1px solid var(--neutral-200); border-radius:12px;
+    background:#fff; color:var(--neutral-900); padding:8px 12px; box-sizing:border-box;
+  }
+  textarea{min-height:110px; resize:vertical;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    display:inline-flex; align-items:center; height:36px; padding:0 16px;
+    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
+  .provider{
+    display:flex; gap:12px; align-items:flex-start; padding:12px; border:1px solid var(--neutral-200); border-radius:16px; background:#fff;
+  }
+  .avatar{width:48px; height:48px; border-radius:24px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .prov-name{font-weight:700; color:var(--neutral-900);}
+  .prov-meta{font-size:14px; color:var(--neutral-700);}
+  .small{font-size:12px; color:var(--neutral-500);}
+  .map-like{height:160px; border-radius:16px; background:
+    radial-gradient(80px 80px at 70% 30%, rgba(37,99,235,.12), transparent),
+    radial-gradient(120px 120px at 30% 60%, rgba(37,99,235,.08), transparent),
+    var(--neutral-200); border:1px solid var(--neutral-200);}
+</style>
+<script>
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  // Simple state
+  const S = {
+    cat:'', symptoms:'', urgency:'', address:'', provider:null
+  };
+
+  function selectChip(groupId, el, value){
+    const group = document.getElementById(groupId);
+    if(!group) return;
+    group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    return value;
+  }
+
+  function selectCategory(el, value){
+    S.cat = selectChip('electricCategories', el, value);
+  }
+
+  function selectUrgency(el, value){
+    S.urgency = selectChip('urgencyChips', el, value);
+  }
+
+  function syncSymptoms(){
+    const t = document.getElementById('symptomsText');
+    S.symptoms = t ? t.value.trim() : '';
+  }
+
+  function syncAddress(){
+    const a = document.getElementById('addrText');
+    S.address = a ? a.value.trim() : '';
+  }
+
+  const PROS = [
+    { name:'Ion Pop – Electrician', rating:4.8, eta:'30–45 min', jobs:320, distance:'1.2 km' },
+    { name:'Maria Ionescu – Emergency Elec.', rating:4.6, eta:'45–60 min', jobs:210, distance:'2.0 km' },
+    { name:'Dan Volt SRL', rating:4.4, eta:'Today', jobs:150, distance:'3.5 km' }
+  ];
+
+  function renderProviders(){
+    const list = document.getElementById('providerList');
+    if(!list) return;
+    list.innerHTML = '';
+    PROS.forEach((p,i)=>{
+      const div = document.createElement('div');
+      div.className = 'provider';
+      div.innerHTML = `
+        <div class="avatar" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="prov-name">${p.name}</div>
+          <div class="prov-meta">★ ${p.rating.toFixed(1)} • ${p.jobs} jobs</div>
+          <div class="small">ETA: ${p.eta} • ${p.distance}</div>
+          <div class="row" style="margin-top:8px;">
+            <a href="#06_Submit_Confirmation" class="btn secondary" data-index="${i}">Select</a>
+          </div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('a.btn.secondary').forEach(a=>{
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        const i = +a.getAttribute('data-index');
+        S.provider = PROS[i];
+        fillConfirmation();
+        go('06_Submit_Confirmation');
+      });
+    });
+  }
+
+  function fillConfirmation(){
+    const cCat = document.getElementById('confCat');
+    const cSym = document.getElementById('confSym');
+    const cUrg = document.getElementById('confUrg');
+    const cAdr = document.getElementById('confAddr');
+    const cPrv = document.getElementById('confProvider');
+    if(cCat) cCat.textContent = S.cat || 'Electrical outage';
+    if(cSym) cSym.textContent = S.symptoms || '—';
+    if(cUrg) cUrg.textContent = S.urgency || 'Standard';
+    if(cAdr) cAdr.textContent = S.address || 'Saved home address';
+    if(cPrv) cPrv.textContent = S.provider ? `${S.provider.name} (★ ${S.provider.rating.toFixed(1)})` : '—';
+  }
+</script>
+</head>
+<body>
+
+<!-- 00 Context / entry -->
+<section class="screen" id="00_Context_PowerOutage">
+  <div class="title">Power Outage – Get Help Fast</div>
+  <div class="card" style="background:radial-gradient(circle at top, rgba(37,99,235,.04), #fff);">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">User faces a sudden blackout and needs urgent assistance from a qualified electrician.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: at home, low lighting</span>
+      <span class="badge">Starting point: Home (logged in)</span>
+      <span class="badge">High stress scenario</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body">
+      <li>Confirm it’s an electrical issue</li>
+      <li>Select electrical category</li>
+      <li>Describe symptoms</li>
+      <li>Confirm urgency & address</li>
+      <li>Pick a professional</li>
+      <li>Submit & await acceptance</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Recognize_Issue" class="btn primary" onclick="return go('01_Recognize_Issue')">Start</a>
+  </div>
+</section>
+
+<!-- 01 Recognize issue -->
+<section class="screen" id="01_Recognize_Issue">
+  <div class="title">What’s happening right now?</div>
+  <div class="body muted">We’ll connect you to an electrician. Tell us if it’s really power-related.</div>
+
+  <div class="card">
+    <div class="label">Quick checks</div>
+    <div class="chips">
+      <span class="chip">Total blackout</span>
+      <span class="chip">Partial (some rooms)</span>
+      <span class="chip">Sparks / burning smell</span>
+      <span class="chip">Breaker keeps tripping</span>
+    </div>
+    <div class="divider"></div>
+    <div class="small">If you see or smell burning, cut power and call emergency services.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Select_ElectricalCategory" class="btn primary" onclick="return go('02_Select_ElectricalCategory')">Electrical problem →</a>
+    <a href="#00_Context_PowerOutage" class="btn secondary" onclick="return go('00_Context_PowerOutage')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Select electrical category -->
+<section class="screen" id="02_Select_ElectricalCategory">
+  <div class="title">Select electrical issue</div>
+  <div class="body muted">Pick the option that matches your case best.</div>
+
+  <div id="electricCategories" class="chips">
+    <span class="chip" onclick="selectCategory(this,'Complete power outage')">Complete power outage</span>
+    <span class="chip" onclick="selectCategory(this,'Partial outage / circuit')">Partial outage / circuit</span>
+    <span class="chip" onclick="selectCategory(this,'Breaker / fuse problem')">Breaker / fuse problem</span>
+    <span class="chip" onclick="selectCategory(this,'Sockets / lights not working')">Sockets / lights</span>
+    <span class="chip" onclick="selectCategory(this,'Electric panel issue')">Electric panel</span>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Describe_Symptoms" class="btn primary" onclick="return go('03_Describe_Symptoms')">Continue</a>
+    <a href="#01_Recognize_Issue" class="btn secondary" onclick="return go('01_Recognize_Issue')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Describe symptoms -->
+<section class="screen" id="03_Describe_Symptoms">
+  <div class="title">Describe symptoms</div>
+  <div class="body muted">Use your own words. This helps the electrician estimate time & tools.</div>
+
+  <div class="col">
+    <label class="label" for="symptomsText">What did you notice?</label>
+    <textarea id="symptomsText" placeholder="E.g., Power went off in the whole apartment; main breaker tripped and won’t stay on."></textarea>
+  </div>
+
+  <div class="card">
+    <div class="label">Photos (optional)</div>
+    <div class="row" style="gap:8px;">
+      <div class="card" style="width:90px; height:90px; align-items:center; justify-content:center;">+</div>
+      <div class="card" style="width:90px; height:90px; align-items:center; justify-content:center;">+</div>
+    </div>
+    <div class="small muted">Upload panel / breaker photo if safe.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Urgency_Address" class="btn primary" onclick="syncSymptoms(); return go('04_Urgency_Address')">Continue</a>
+    <a href="#02_Select_ElectricalCategory" class="btn secondary" onclick="return go('02_Select_ElectricalCategory')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Confirm urgency + address -->
+<section class="screen" id="04_Urgency_Address">
+  <div class="title">How urgent is this?</div>
+  <div class="body muted">We’ll prioritize faster providers for high urgency.</div>
+
+  <div id="urgencyChips" class="chips">
+    <span class="chip" onclick="selectUrgency(this,'Emergency (ASAP)')">Emergency (ASAP)</span>
+    <span class="chip" onclick="selectUrgency(this,'Within 2 hours')">Within 2 hours</span>
+    <span class="chip" onclick="selectUrgency(this,'Today')">Today</span>
+  </div>
+
+  <div class="col">
+    <label class="label" for="addrText">Service address</label>
+    <input id="addrText" class="input" placeholder="Strada Exemplu 12, Cluj" oninput="syncAddress()" />
+    <div class="small muted">Tip: share entrance / floor for faster arrival.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Location preview</div>
+    <div class="map-like" aria-label="map placeholder"></div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Professionals_List" class="btn primary" onclick="syncAddress(); renderProviders(); return go('05_Professionals_List')">See available electricians</a>
+    <a href="#03_Describe_Symptoms" class="btn secondary" onclick="return go('03_Describe_Symptoms')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Review proposed professionals -->
+<section class="screen" id="05_Professionals_List">
+  <div class="title">Available electricians</div>
+  <div class="body muted">Closest & fastest for your urgency.</div>
+
+  <div id="providerList" class="col">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Urgency_Address" class="btn secondary" onclick="return go('04_Urgency_Address')">Back</a>
+  </div>
+</section>
+
+<!-- 06 Confirm request submission -->
+<section class="screen" id="06_Submit_Confirmation">
+  <div class="title">Request sent ✅</div>
+  <div class="body muted">We’ve notified the electrician. You’ll see acceptance shortly.</div>
+
+  <div class="card">
+    <div class="label">Chosen professional</div>
+    <div class="body" id="confProvider">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Issue</div>
+    <div class="body" id="confCat">—</div>
+    <div class="label" style="margin-top:8px;">Symptoms</div>
+    <div class="body" id="confSym" style="white-space:pre-wrap;">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Urgency & address</div>
+    <div class="body"><span id="confUrg">—</span> • <span id="confAddr">—</span></div>
+    <div class="small muted" style="margin-top:8px;">You can chat or cancel if no response in 15 minutes.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_PowerOutage" class="btn primary" onclick="return go('00_Context_PowerOutage')">Back to context</a>
+  </div>
+</section>
+
+</body>
+</html>

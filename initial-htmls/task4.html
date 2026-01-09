@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ServEase – Task 4: Communicate & Share Media (Mobile)</title>
+<style>
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-m:12px; --radius-l:16px;
+    --space-s:8px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  .screen{
+    width:390px; min-height:844px; margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l); box-sizing:border-box;
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:8px 0;}
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:12px; padding:0 16px; font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .row{display:flex; gap:12px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea{
+    width:100%; border:1px solid var(--neutral-200); border-radius:12px; background:#fff; padding:8px 12px; box-sizing:border-box;
+  }
+  textarea{min-height:110px; resize:vertical;}
+  .media-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .media-tile{
+    width:110px; height:110px; border:1px solid var(--neutral-200); border-radius:16px;
+    background:linear-gradient(135deg,#eff6ff,#e2e8f0);
+    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; text-align:center;
+  }
+  .ai-tags{display:flex; flex-wrap:wrap; gap:6px;}
+  .ai-tag{background:rgba(37,99,235,.08); border:1px solid rgba(37,99,235,.35); color:var(--neutral-900); border-radius:999px; padding:4px 10px; font-size:12px;}
+  .timeline{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .timeline .step{display:flex; align-items:center; gap:6px;}
+  .dot{width:10px; height:10px; border-radius:5px; background:var(--neutral-200);}
+  .dot.active{background:var(--primary-500);}
+  .provider-pill{display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--neutral-200); border-radius:999px; padding:4px 10px;}
+  .status{display:inline-flex; align-items:center; gap:5px; font-size:12px;}
+  .status.ok{color:var(--success-500);}
+  .status.wait{color:var(--warning-500);}
+</style>
+<script>
+  function go(id){ const el = document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  const MediaState = {
+    files: [],
+    text: '',
+    aiSummary: [
+      "Object: Electrical panel / breaker",
+      "Likely cause: Tripped circuit",
+      "Secondary: Loose / worn switch"
+    ]
+  };
+
+  function addFakeMedia(type){
+    // for demo: just push label and re-render
+    MediaState.files.push(type);
+    renderAttached();
+  }
+
+  function renderAttached(){
+    const wrap = document.getElementById('attachedMedia');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(!MediaState.files.length){
+      wrap.innerHTML = '<div class="body muted">No media attached yet.</div>';
+      return;
+    }
+    MediaState.files.forEach((f,idx)=>{
+      const tile = document.createElement('div');
+      tile.className = 'media-tile';
+      tile.innerHTML = `<div style="font-size:32px;">${f==='video'?'🎥':'📷'}</div><div class="body" style="font-size:12px;">${f==='video'?'Video clip':'Photo'} ${idx+1}</div>`;
+      wrap.appendChild(tile);
+    });
+  }
+
+  function syncClarification(){
+    const t = document.getElementById('clarifyText');
+    MediaState.text = t ? t.value.trim() : '';
+    // also update on AI screen
+    const userNote = document.getElementById('aiUserNote');
+    if(userNote) userNote.textContent = MediaState.text || '—';
+  }
+
+  function goToAI(){
+    syncClarification();
+    // fill AI tags
+    const list = document.getElementById('aiTags');
+    if(list){
+      list.innerHTML = '';
+      MediaState.aiSummary.forEach(t=>{
+        const span = document.createElement('span');
+        span.className = 'ai-tag';
+        span.textContent = t;
+        list.appendChild(span);
+      });
+    }
+    go('03_Clarify_AI_Tagging');
+  }
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_ShareMedia">
+  <div class="title">Share Media of the Problem</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">
+      Improve diagnosis before arrival. Make it effortless to show what’s broken.
+    </div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: Home, user records short video</span>
+      <span class="badge">Starting point: After request creation</span>
+      <span class="badge">AI vision tags issue</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body" style="padding-left:20px;">
+      <li>Capture image/video of damaged item</li>
+      <li>Attach media to existing request</li>
+      <li>Provide short text; AI identifies object & probable causes</li>
+      <li>Await provider acknowledgment</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Capture_Media" class="btn primary" onclick="return go('01_Capture_Media')">Start</a>
+  </div>
+</section>
+
+<!-- 01 Capture media -->
+<section class="screen" id="01_Capture_Media">
+  <div class="title">Capture the problem</div>
+  <div class="body muted">Record a short video or take 2–3 photos. Keep lighting as good as possible.</div>
+
+  <div class="card">
+    <div class="label">Capture options</div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <a class="btn secondary" onclick="addFakeMedia('video')">🎥 Record video</a>
+      <a class="btn ghost" onclick="addFakeMedia('photo')">📷 Take photo</a>
+      <a class="btn ghost" onclick="addFakeMedia('photo')">Upload from gallery</a>
+    </div>
+    <div class="small muted">Video under 30s recommended.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Preview</div>
+    <div id="attachedMedia" class="media-grid">
+      <!-- media tiles appear here -->
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Attach_To_Request" class="btn primary" onclick="return go('02_Attach_To_Request')">Attach to request</a>
+    <a href="#00_Context_ShareMedia" class="btn secondary" onclick="return go('00_Context_ShareMedia')">Back</a>
+  </div>
+
+  <script>renderAttached();</script>
+</section>
+
+<!-- 02 Attach media to existing request -->
+<section class="screen" id="02_Attach_To_Request">
+  <div class="title">Attach to request</div>
+  <div class="body muted">You’re adding media to: <b>Request #1842 – “Power issue in kitchen”</b></div>
+
+  <div class="card">
+    <div class="label">Current attachments</div>
+    <div id="attachedMedia" class="media-grid">
+      <!-- re-rendered by JS in previous section -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Provider will see</div>
+    <div class="body muted">• media thumbnails<br/>• your short notes<br/>• AI auto-detected elements</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Clarify_AI_Tagging" class="btn primary" onclick="return go('03_Clarify_AI_Tagging')">Add clarification</a>
+    <a href="#01_Capture_Media" class="btn secondary" onclick="return go('01_Capture_Media')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Clarify + AI vision tags -->
+<section class="screen" id="03_Clarify_AI_Tagging">
+  <div class="title">Clarify the problem</div>
+  <div class="body muted">Add a short note. We’ll let AI detect objects and likely issues.</div>
+
+  <div class="col">
+    <label class="label" for="clarifyText">Your note</label>
+    <textarea id="clarifyText" placeholder="E.g., breaker tripped, light switch sparked when turning on, now that room has no power." oninput="syncClarification()"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="label">AI Vision result</div>
+    <div class="body muted">Identified elements:</div>
+    <div id="aiTags" class="ai-tags">
+      <!-- filled when moving from previous step -->
+    </div>
+    <div class="divider"></div>
+    <div class="label">AI summary</div>
+    <div class="body" style="font-size:14px;">
+      Likely electrical panel / breaker issue. Could be a tripped circuit or worn/broken switch. Recommend provider to bring: tester, spare breaker, insulated tools.
+    </div>
+    <div class="label" style="margin-top:8px;">User note</div>
+    <div id="aiUserNote" class="body muted">—</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Await_Acknowledgment" class="btn primary" onclick="syncClarification(); return go('04_Await_Acknowledgment')">Send to provider</a>
+    <a href="#02_Attach_To_Request" class="btn secondary" onclick="return go('02_Attach_To_Request')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Await provider acknowledgment -->
+<section class="screen" id="04_Await_Acknowledgment">
+  <div class="title">Waiting for provider 👀</div>
+  <div class="body muted">We sent your media, note and AI summary to: </div>
+  <div class="provider-pill">
+    <div style="width:28px; height:28px; border-radius:14px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);"></div>
+    <div class="body" style="font-size:14px;">Ion Pop – Electrician</div>
+  </div>
+
+  <div class="card">
+    <div class="label">What they see</div>
+    <ul class="body" style="padding-left:20px;">
+      <li>Video of the damaged area</li>
+      <li>Your clarification text</li>
+      <li>AI tags: “tripped circuit”, “broken switch”</li>
+      <li>Original request details</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="label">Status</div>
+    <div class="status wait">● Awaiting acknowledgment</div>
+    <div class="body muted">You’ll get a push notification once the provider opens it.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Timeline</div>
+    <div class="timeline">
+      <div class="step"><span class="dot active"></span><span class="small">Media sent</span></div>
+      <div class="step"><span class="dot"></span><span class="small">Provider reviewing</span></div>
+      <div class="step"><span class="dot"></span><span class="small">Arrival confirmed</span></div>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_ShareMedia" class="btn primary" onclick="return go('00_Context_ShareMedia')">Back to flow</a>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ServEase – Task 5: Review & Rate Completed Job (Mobile)</title>
+<style>
+  /* ===== Tokens (Soft Neutral) ===== */
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --error-500:#DC2626;
+    --radius-s:8px; --radius-m:12px; --radius-l:16px;
+    --space-xs:4px; --space-s:8px; --space-sm:12px; --space-m:16px; --space-l:24px; --space-xl:32px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  /* ===== Frame ===== */
+  .screen{
+    width:390px; min-height:844px; box-sizing:border-box;
+    margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  /* ===== Components ===== */
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:var(--radius-m); padding:0 var(--space-l);
+    font-size:16px; line-height:24px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .row{display:flex; gap:var(--space-m); align-items:center;}
+  .col{display:flex; flex-direction:column; gap:var(--space-s);}
+  .chips{display:flex; flex-wrap:wrap; gap:var(--space-s);}
+  .chip{display:inline-flex; align-items:center; height:36px; padding:0 var(--space-m);
+        border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+    padding:var(--space-m); display:flex; flex-direction:column; gap:var(--space-xs);
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea{
+    width:100%; border:1px solid var(--neutral-200); border-radius:var(--radius-m);
+    background:#fff; color:var(--neutral-900);
+    padding:var(--space-s) var(--space-m); box-sizing:border-box;
+  }
+  textarea{min-height:120px; resize:vertical;}
+  .stepper{display:flex; gap:var(--space-s);}
+  .step{width:12px; height:12px; border-radius:6px; background:var(--neutral-300);}
+  .step.active{background:var(--primary-500);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:var(--space-s);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:var(--space-s) 0;}
+  /* ===== Stars ===== */
+  .stars{display:flex; gap:10px;}
+  .star{
+    width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center;
+    border-radius:8px; border:1px solid var(--neutral-200); background:#fff;
+    font-size:20px; cursor:pointer; user-select:none;
+  }
+  .star.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset;}
+  .kv{display:flex; gap:8px; align-items:center; font-size:14px; color:var(--neutral-700);}
+  .rating-big{font-size:32px; font-weight:800; line-height:1; color:var(--neutral-900);}
+  .context-box{display:flex; flex-direction:column; gap:8px;}
+</style>
+<script>
+  // Simple in-page navigation for preview; html.to.design will import each section as a frame.
+  function go(toId){
+    const el = document.getElementById(toId);
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    return false;
+  }
+
+  // Review state (for confirmation calc)
+  const ReviewState = {
+    provider: "Ion Pop – Electrician",
+    oldAvg: 4.6,
+    oldCount: 120,
+    stars: 0,
+    feedback: ""
+  };
+
+  function selectStars(n){
+    ReviewState.stars = n;
+    const nodes = document.querySelectorAll('.star');
+    nodes.forEach((el, idx) => {
+      el.classList.toggle('active', idx < n);
+      el.setAttribute('aria-pressed', idx < n ? 'true' : 'false');
+    });
+    const label = document.getElementById('selectedScore');
+    if(label) label.textContent = n ? `${n} / 5` : '—';
+  }
+
+  function syncFeedback(){
+    const ta = document.getElementById('feedbackText');
+    ReviewState.feedback = ta ? ta.value.trim() : "";
+  }
+
+  function submitReview(){
+    syncFeedback();
+    // Compute updated rating
+    const n = ReviewState.oldCount;
+    const avg = ReviewState.oldAvg;
+    const r = Math.max(1, Math.min(5, ReviewState.stars || 0)); // clamp 1..5 if selected
+    const newCount = n + 1;
+    const newAvg = r ? ((avg * n) + r) / newCount : avg; // if no rating, keep old avg
+    // Fill confirmation UI
+    const confName = document.getElementById('confProviderName');
+    const confOld = document.getElementById('confOld');
+    const confNew = document.getElementById('confNew');
+    const confCount = document.getElementById('confCount');
+    const confText = document.getElementById('confText');
+
+    if(confName) confName.textContent = ReviewState.provider;
+    if(confOld) confOld.textContent = `${avg.toFixed(1)} (${n})`;
+    if(confNew) confNew.textContent = `${newAvg.toFixed(1)}`;
+    if(confCount) confCount.textContent = `${newCount} reviews`;
+    if(confText) confText.textContent = ReviewState.feedback || '—';
+
+    go('05_Confirm_UpdatedRating');
+  }
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_JobCompleted">
+  <div class="title">Review & Rate Completed Job</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Express your satisfaction and help others choose reliable providers.</div>
+    <div class="divider"></div>
+    <div class="context-box">
+      <div class="kv"><span class="badge">Context</span><span class="body">Immediately or within 24h after completion</span></div>
+      <div class="kv"><span class="badge">Starting Point</span><span class="body">Job marked as <b>Completed</b> in system</span></div>
+      <div class="kv"><span class="badge">Provider</span><span class="body"><b>Ion Pop – Electrician</b></span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body">
+      <li>Reflect on experience (timeliness, quality, communication)</li>
+      <li>Give a star score (1–5)</li>
+      <li>Optionally add textual feedback</li>
+      <li>Submit & view updated provider rating</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Reflect_Criteria" class="btn primary" onclick="return go('01_Reflect_Criteria')">Start review</a>
+  </div>
+</section>
+
+<!-- 01 Reflect on experience -->
+<section class="screen" id="01_Reflect_Criteria">
+  <div class="title">Reflect on your experience</div>
+  <div class="body muted">Think about timeliness, work quality, and communication.</div>
+
+  <div class="card">
+    <div class="label">Timeliness</div>
+    <div class="chips">
+      <span class="chip">On time</span><span class="chip">Slightly late</span><span class="chip">Significantly late</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Work quality</div>
+    <div class="chips">
+      <span class="chip">Excellent</span><span class="chip">Good</span><span class="chip">Needs improvement</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Communication</div>
+    <div class="chips">
+      <span class="chip">Clear</span><span class="chip">Average</span><span class="chip">Poor</span>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Rate_Stars" class="btn primary" onclick="return go('02_Rate_Stars')">Continue</a>
+    <a href="#00_Context_JobCompleted" class="btn secondary" onclick="return go('00_Context_JobCompleted')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Star/score evaluation -->
+<section class="screen" id="02_Rate_Stars">
+  <div class="title">Overall rating</div>
+  <div class="body muted">How satisfied are you with this job?</div>
+
+  <div class="stars" role="radiogroup" aria-label="Star rating">
+    <div class="star" role="radio" aria-checked="false" onclick="selectStars(1)">★</div>
+    <div class="star" role="radio" aria-checked="false" onclick="selectStars(2)">★</div>
+    <div class="star" role="radio" aria-checked="false" onclick="selectStars(3)">★</div>
+    <div class="star" role="radio" aria-checked="false" onclick="selectStars(4)">★</div>
+    <div class="star" role="radio" aria-checked="false" onclick="selectStars(5)">★</div>
+  </div>
+
+  <div class="row">
+    <span class="label">Selected score:</span>
+    <span id="selectedScore" class="body">—</span>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Text_Feedback" class="btn primary" onclick="return go('03_Text_Feedback')">Continue</a>
+    <a href="#01_Reflect_Criteria" class="btn secondary" onclick="return go('01_Reflect_Criteria')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Optional textual feedback -->
+<section class="screen" id="03_Text_Feedback">
+  <div class="title">Optional feedback</div>
+  <div class="body muted">Share details that could help others decide.</div>
+
+  <div class="col">
+    <label class="label" for="feedbackText">Your feedback (optional)</label>
+    <textarea id="feedbackText" placeholder="E.g., Arrived on time, clearly explained options, neat work area."></textarea>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Submit" class="btn primary" onclick="syncFeedback(); return go('04_Submit')">Continue</a>
+    <a href="#02_Rate_Stars" class="btn secondary" onclick="return go('02_Rate_Stars')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Submit -->
+<section class="screen" id="04_Submit">
+  <div class="title">Submit your review</div>
+  <div class="card">
+    <div class="label">Provider</div>
+    <div class="body"><b>Ion Pop – Electrician</b></div>
+  </div>
+  <div class="card">
+    <div class="label">Your rating</div>
+    <div class="body"><span id="selectedScorePreview">Uses the chosen stars</span></div>
+    <div class="label" style="margin-top:8px;">Your feedback</div>
+    <div class="body" id="feedbackPreview" style="white-space:pre-wrap;">(Shown after submission)</div>
+  </div>
+
+  <script>
+    // Keep preview synced when entering this screen
+    const observer = new MutationObserver(() => {
+      const score = document.getElementById('selectedScore')?.textContent || '—';
+      const prev = document.getElementById('selectedScorePreview');
+      if(prev) prev.textContent = score;
+      const fb = document.getElementById('feedbackText')?.value || '';
+      const fbPrev = document.getElementById('feedbackPreview');
+      if(fbPrev) fbPrev.textContent = fb || '—';
+    });
+    window.addEventListener('load', () => {
+      const tgt = document.body; observer.observe(tgt, {subtree:true, characterData:true, childList:true});
+    });
+  </script>
+
+  <div class="sticky-actions">
+    <a href="#05_Confirm_UpdatedRating" class="btn primary" onclick="submitReview(); return false;">Submit review</a>
+    <a href="#03_Text_Feedback" class="btn secondary" onclick="return go('03_Text_Feedback')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Confirmation + updated provider rating -->
+<section class="screen" id="05_Confirm_UpdatedRating">
+  <div class="title">Thank you for your review ✅</div>
+  <div class="card">
+    <div class="label">Provider</div>
+    <div class="body" id="confProviderName"><b>Ion Pop – Electrician</b></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Provider rating updated</div>
+    <div class="row" style="justify-content:space-between; align-items:flex-end;">
+      <div class="col" style="gap:6px;">
+        <div class="body muted">Previous</div>
+        <div class="row" style="gap:8px; align-items:baseline;">
+          <div class="rating-big" id="confOld">4.6 (120)</div>
+        </div>
+      </div>
+      <div class="col" style="gap:6px; align-items:flex-end;">
+        <div class="body muted">New average</div>
+        <div class="row" style="gap:8px; align-items:baseline;">
+          <div class="rating-big" id="confNew">4.7</div>
+          <div class="body muted" id="confCount">121 reviews</div>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="label">Your feedback</div>
+    <div class="body" id="confText" style="white-space:pre-wrap;">—</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_JobCompleted" class="btn primary" onclick="return go('00_Context_JobCompleted')">Done</a>
+  </div>
+</section>
+
+</body>
+</html>

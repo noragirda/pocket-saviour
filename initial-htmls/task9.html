@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ServEase – Task 9: Manage Active Appointments (Mobile)</title>
+<style>
+  /* ===== Tokens (Soft Neutral) ===== */
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-s:8px; --radius-m:12px; --radius-l:16px;
+    --space-xs:4px; --space-s:8px; --space-sm:12px; --space-m:16px; --space-l:24px; --space-xl:32px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  /* ===== Frame ===== */
+  .screen{
+    width:390px; min-height:844px; box-sizing:border-box;
+    margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:var(--space-s) 0;}
+  /* ===== Components ===== */
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:var(--radius-m); padding:0 var(--space-l);
+    font-size:16px; line-height:24px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:var(--space-s);}
+  .row{display:flex; gap:var(--space-m); align-items:center;}
+  .col{display:flex; flex-direction:column; gap:var(--space-s);}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+    padding:var(--space-m); display:flex; flex-direction:column; gap:var(--space-xs);
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+
+  .appt{
+    border:1px solid var(--neutral-200); border-radius:16px; padding:12px; background:#fff;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .appt-time{font-weight:700; color:var(--neutral-900);}
+  .appt-meta{font-size:14px; color:var(--neutral-700);}
+  .appt-dist{font-size:12px; color:var(--neutral-700);}
+  .tag{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--neutral-200); background:#fff;}
+  .tag.conflict{border-color:var(--error-500); color:var(--error-500);}
+  .tag.confirmed{border-color:var(--success-500); color:var(--success-500);}
+  .avatar{width:40px; height:40px; border-radius:20px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .small{font-size:12px; color:var(--neutral-700);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:var(--space-s);}
+  .chip{
+    display:inline-flex; align-items:center; height:36px; padding:0 var(--space-m);
+    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
+
+  .week{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .day{
+    height:38px; border:1px solid var(--neutral-200); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; background:#fff; font-size:12px; cursor:pointer;
+  }
+  .day.active{border-color:var(--primary-500); color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset;}
+  .block-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .block{border:1px solid var(--neutral-200); border-radius:10px; padding:8px 12px; background:#fff; cursor:pointer; font-size:14px;}
+  .block.active{border-color:var(--warning-500); color:var(--warning-500); box-shadow:0 0 0 2px rgba(234,179,8,.2) inset;}
+</style>
+<script>
+  // Simple nav for preview; html.to.design will import each <section> as a separate frame.
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  // Demo state
+  const State = {
+    date: 'Today',
+    sort: 'time', // 'time' | 'distance'
+    appointments: [
+      { id:1, client:'Ana M.', job:'Oven Repair', address:'Str. Lalelelor 14', start:'09:00', end:'10:00', distance:2.8, attendance:false },
+      { id:2, client:'Casa Verde', job:'Stove Ignition', address:'Bd. Eroilor 7',   start:'10:15', end:'11:00', distance:1.2, attendance:false },
+      { id:3, client:'Ion P.', job:'Dishwasher Leak', address:'Str. Plopilor 23',   start:'10:45', end:'11:30', distance:4.7, attendance:false }, // overlaps with #2
+      { id:4, client:'Maria I.', job:'Fridge Cooling', address:'Str. Horea 5',      start:'12:30', end:'13:30', distance:5.1, attendance:false }
+    ],
+    availabilityBlocks: new Set(), // e.g., '10:00–12:00'
+  };
+
+  function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+  function overlaps(a,b){ return timeToMin(a.start) < timeToMin(b.end) && timeToMin(b.start) < timeToMin(a.end); }
+
+  function computeConflicts(list){
+    // mark conflicts if any pair overlaps (on current sort)
+    const conflicts = new Set();
+    for(let i=0;i<list.length;i++){
+      for(let j=i+1;j<list.length;j++){
+        if(overlaps(list[i], list[j])){ conflicts.add(list[i].id); conflicts.add(list[j].id); }
+      }
+    }
+    return conflicts;
+  }
+
+  function renderList(){
+    const container = document.getElementById('apptList');
+    if(!container) return;
+    container.innerHTML = '';
+
+    const list = [...State.appointments];
+    if(State.sort==='time'){
+      list.sort((a,b)=> timeToMin(a.start)-timeToMin(b.start));
+    }else{
+      list.sort((a,b)=> a.distance-b.distance);
+    }
+    const conflicts = computeConflicts(list);
+
+    list.forEach(a=>{
+      const div = document.createElement('div');
+      div.className='appt';
+      div.innerHTML = `
+        <div class="avatar" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="row" style="justify-content:space-between; align-items:flex-start;">
+            <div class="col" style="gap:2px;">
+              <div class="appt-time">${a.start}–${a.end}</div>
+              <div class="appt-meta">${a.client} • ${a.job}</div>
+              <div class="small">${a.address}</div>
+              <div class="appt-dist">Distance: ${a.distance.toFixed(1)} km</div>
+            </div>
+            <div class="col" style="gap:6px; align-items:flex-end;">
+              <span class="tag ${conflicts.has(a.id)?'conflict':''}">${conflicts.has(a.id)?'Conflict':'' || 'Scheduled'}</span>
+              <a class="btn ghost" data-id="${a.id}">Details</a>
+            </div>
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    // bind details → go to proximity/order with sort preserved
+    container.querySelectorAll('a.btn.ghost').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        e.preventDefault();
+        go('02_Proximity_Order');
+      });
+    });
+
+    // update header counters
+    const count = document.getElementById('countJobs');
+    if(count) count.textContent = `${list.length} jobs • ${State.date}`;
+    const warn = document.getElementById('conflictWarn');
+    if(warn) warn.style.display = conflicts.size ? 'block' : 'none';
+  }
+
+  function setSort(sort){
+    State.sort = sort;
+    document.querySelectorAll('[data-sort]').forEach(b=>{
+      b.classList.toggle('active', b.getAttribute('data-sort')===sort);
+    });
+    renderList();
+  }
+
+  function optimizeByDistance(){
+    setSort('distance');
+    go('02_Proximity_Order');
+  }
+
+  function toggleBlock(el, label){
+    el.classList.toggle('active');
+    if(el.classList.contains('active')) State.availabilityBlocks.add(label);
+    else State.availabilityBlocks.delete(label);
+    // show a tiny toast (alert for demo)
+    // alert('Availability updated: ' + [...State.availabilityBlocks].join(', ') || 'No blocks');
+  }
+
+  function toggleAttendance(id){
+    const a = State.appointments.find(x=>x.id===id);
+    if(!a) return;
+    a.attendance = !a.attendance;
+    renderAttendanceList();
+  }
+
+  function renderAttendanceList(){
+    const wrap = document.getElementById('attendList');
+    const count = document.getElementById('attendCount');
+    if(!wrap) return;
+    wrap.innerHTML='';
+    let confirmed=0;
+
+    const list = [...State.appointments].sort((a,b)=> timeToMin(a.start)-timeToMin(b.start));
+    list.forEach(a=>{
+      const row = document.createElement('div');
+      row.className='appt';
+      row.innerHTML = `
+        <div class="avatar" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="row" style="justify-content:space-between;">
+            <div class="col" style="gap:2px;">
+              <div class="appt-time">${a.start}–${a.end}</div>
+              <div class="appt-meta">${a.client} • ${a.job}</div>
+              <div class="small">${a.address}</div>
+            </div>
+            <div class="col" style="gap:6px; align-items:flex-end;">
+              <span class="tag ${a.attendance?'confirmed':''}">${a.attendance?'Confirmed':''||'Pending'}</span>
+              <a class="btn ${a.attendance?'secondary':'primary'}" data-id="${a.id}">${a.attendance?'Undo':'Confirm'}</a>
+            </div>
+          </div>
+        </div>
+      `;
+      wrap.appendChild(row);
+      if(a.attendance) confirmed++;
+    });
+
+    wrap.querySelectorAll('a.btn').forEach(b=>{
+      b.addEventListener('click', e=>{
+        e.preventDefault();
+        const id = +b.getAttribute('data-id');
+        toggleAttendance(id);
+      });
+    });
+
+    if(count) count.textContent = `${confirmed} / ${State.appointments.length} confirmed`;
+  }
+
+  // Initial render on load
+  window.addEventListener('load', ()=>{
+    renderList();
+    renderAttendanceList();
+  });
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_ManageAppointments">
+  <div class="title">Manage Active Appointments</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Track today’s schedule, avoid overlaps, and stay on time.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: Provider checking calendar before workday</span>
+      <span class="badge">Starting point: Logged-in dashboard</span>
+      <span class="badge">Relevance: Planning & logistical control</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body">
+      <li>View list of confirmed jobs by date/time</li>
+      <li>Check location proximity and order visits</li>
+      <li>Adjust availability if a conflict is detected</li>
+      <li>Confirm attendance for each upcoming job</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_List_ByDate" class="btn primary" onclick="return go('01_List_ByDate')">Open today’s list</a>
+  </div>
+</section>
+
+<!-- 01 View list by date/time -->
+<section class="screen" id="01_List_ByDate">
+  <div class="title">Today • Active Jobs</div>
+  <div class="row" style="justify-content:space-between;">
+    <div id="countJobs" class="body muted">—</div>
+    <div class="row">
+      <a data-sort="time" class="chip active" onclick="setSort('time')">Sort: Time</a>
+      <a data-sort="distance" class="chip" onclick="setSort('distance')">Sort: Distance</a>
+    </div>
+  </div>
+
+  <div id="conflictWarn" class="card" style="display:none;">
+    <div class="row" style="gap:8px;"><span class="badge" style="border-color:var(--error-500); color:var(--error-500);">Conflict</span>
+      <div class="body">Overlapping jobs detected. Review proximity or adjust availability.</div></div>
+  </div>
+
+  <div id="apptList" class="col"><!-- filled by JS --></div>
+
+  <div class="sticky-actions">
+    <a href="#02_Proximity_Order" class="btn primary" onclick="return go('02_Proximity_Order')">Check proximity & route</a>
+    <a href="#00_Context_ManageAppointments" class="btn secondary" onclick="return go('00_Context_ManageAppointments')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Check proximity & order -->
+<section class="screen" id="02_Proximity_Order">
+  <div class="title">Proximity & Order</div>
+  <div class="body muted">Minimize travel by grouping nearby addresses.</div>
+
+  <div class="card">
+    <div class="label">Quick actions</div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <a class="btn ghost" onclick="optimizeByDistance()">Optimize by distance</a>
+      <a class="btn ghost" onclick="setSort('time')">Reset order by time</a>
+    </div>
+    <div class="divider"></div>
+    <div class="body muted">Tip: Aim for <b>≤ 2 km</b> between consecutive jobs.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Map preview (placeholder)</div>
+    <div style="height:200px; border:1px solid var(--neutral-200); border-radius:16px; background:
+      radial-gradient(80px 80px at 70% 30%, rgba(37,99,235,.12), transparent),
+      radial-gradient(120px 120px at 30% 60%, rgba(37,99,235,.08), transparent),
+      var(--neutral-200);"></div>
+    <div class="small">Pins A→B→C reflect current order.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Adjust_Availability" class="btn primary" onclick="return go('03_Adjust_Availability')">Adjust availability</a>
+    <a href="#01_List_ByDate" class="btn secondary" onclick="return go('01_List_ByDate')">Back to list</a>
+  </div>
+</section>
+
+<!-- 03 Adjust availability on conflict -->
+<section class="screen" id="03_Adjust_Availability">
+  <div class="title">Adjust Availability</div>
+  <div class="body muted">Block off windows to avoid new overlaps or reschedule affected jobs.</div>
+
+  <div class="card">
+    <div class="label">Pick a day</div>
+    <div class="week">
+      <div class="day active">Mon</div><div class="day">Tue</div><div class="day">Wed</div>
+      <div class="day">Thu</div><div class="day">Fri</div><div class="day">Sat</div><div class="day">Sun</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Block time windows</div>
+    <div class="block-row">
+      <span class="block" onclick="toggleBlock(this,'08:00–10:00')">08:00–10:00</span>
+      <span class="block" onclick="toggleBlock(this,'10:00–12:00')">10:00–12:00</span>
+      <span class="block" onclick="toggleBlock(this,'12:00–14:00')">12:00–14:00</span>
+      <span class="block" onclick="toggleBlock(this,'14:00–16:00')">14:00–16:00</span>
+      <span class="block" onclick="toggleBlock(this,'16:00–18:00')">16:00–18:00</span>
+    </div>
+    <div class="small muted">Blocked windows won’t be offered to clients.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Confirm_Attendance" class="btn primary" onclick="return go('04_Confirm_Attendance')">Continue</a>
+    <a href="#02_Proximity_Order" class="btn secondary" onclick="return go('02_Proximity_Order')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Confirm attendance -->
+<section class="screen" id="04_Confirm_Attendance">
+  <div class="title">Confirm Attendance</div>
+  <div class="body muted" id="attendCount">—</div>
+
+  <div id="attendList" class="col"><!-- filled by JS --></div>
+
+  <div class="sticky-actions">
+    <a href="#01_List_ByDate" class="btn primary" onclick="return go('01_List_ByDate')">Done & back to list</a>
+    <a href="#03_Adjust_Availability" class="btn secondary" onclick="return go('03_Adjust_Availability')">Back</a>
+  </div>
+</section>
+
+</body>
+</html>

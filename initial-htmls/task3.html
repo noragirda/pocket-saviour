@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ServEase – Task 3: Schedule Appliance Repair (Mobile)</title>
+<style>
+  /* ===== Tokens (Soft Neutral) ===== */
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-s:8px; --radius-m:12px; --radius-l:16px;
+    --space-xs:4px; --space-s:8px; --space-sm:12px; --space-m:16px; --space-l:24px; --space-xl:32px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  /* ===== Frame ===== */
+  .screen{
+    width:390px; min-height:844px; box-sizing:border-box;
+    margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:var(--space-s) 0;}
+  /* ===== Components ===== */
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:var(--radius-m); padding:0 var(--space-l);
+    font-size:16px; line-height:24px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:var(--space-s);}
+  .row{display:flex; gap:var(--space-m); align-items:center;}
+  .col{display:flex; flex-direction:column; gap:var(--space-s);}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+    padding:var(--space-m); display:flex; flex-direction:column; gap:var(--space-xs);
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea, select{
+    width:100%; border:1px solid var(--neutral-200); border-radius:var(--radius-m);
+    background:#fff; color:var(--neutral-900);
+    padding:var(--space-s) var(--space-m); box-sizing:border-box;
+  }
+  textarea{min-height:110px; resize:vertical;}
+  .chips{display:flex; flex-wrap:wrap; gap:var(--space-s);}
+  .chip{
+    display:inline-flex; align-items:center; height:36px; padding:0 var(--space-m);
+    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
+  .week{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .day{
+    height:38px; border:1px solid var(--neutral-200); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; background:#fff; font-size:12px; cursor:pointer;
+  }
+  .day.active{border-color:var(--primary-500); color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset;}
+  .slot-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .slot{border:1px solid var(--neutral-200); border-radius:10px; padding:8px 12px; background:#fff; cursor:pointer; font-size:14px;}
+  .slot.active{border-color:var(--primary-500); color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset;}
+  .provider{
+    display:flex; gap:12px; align-items:flex-start; padding:12px; border:1px solid var(--neutral-200); border-radius:16px; background:#fff;
+  }
+  .avatar{width:48px; height:48px; border-radius:24px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .prov-name{font-weight:700; color:var(--neutral-900);}
+  .prov-meta{font-size:14px; color:var(--neutral-700);}
+  .kv{display:flex; gap:8px; align-items:center; font-size:14px; color:var(--neutral-700);}
+  .rating{font-weight:700;}
+  .success{color:var(--success-500);}
+  .warning{color:var(--warning-500);}
+</style>
+<script>
+  // Simple in-page navigation for preview; html.to.design will still import each section as a separate frame.
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  // Basic state to carry between steps
+  const S = {
+    appliance: '', issue: '',
+    day: '', window: '', slot: '',
+    provider: null
+  };
+
+  function toggleChips(groupSelector, el){
+    // make chips single-select within a group
+    const group = document.querySelector(groupSelector);
+    if(!group) return;
+    group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function chooseAppliance(el, value){
+    toggleChips('#applianceChips', el);
+    S.appliance = value;
+  }
+
+  function pickDay(el, value){
+    document.querySelectorAll('.day').forEach(d => d.classList.remove('active'));
+    el.classList.add('active');
+    S.day = value;
+  }
+
+  function pickWindow(el, value){
+    toggleChips('#windowChips', el);
+    S.window = value; // Morning / Afternoon / Evening
+  }
+
+  function pickSlot(el, value){
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    S.slot = value; // e.g., 10:00–12:00
+  }
+
+  function syncIssue(){
+    const t = document.getElementById('issueText');
+    S.issue = t ? t.value.trim() : '';
+  }
+
+  // Fake provider suggestions based on window/slot (demo only)
+  const PROVIDERS = [
+    { name:'Ion Pop – Appliances', rating:4.8, reviews:210, windows:['Morning','Afternoon'], eta:'2–3 days', next:['10:00–12:00','12:00–14:00'] },
+    { name:'Maria Ionescu – Stove Tech', rating:4.6, reviews:128, windows:['Afternoon','Evening'], eta:'Tomorrow', next:['14:00–16:00','16:00–18:00'] },
+    { name:'Dan Repair SRL', rating:4.4, reviews:92, windows:['Morning','Evening'], eta:'This week', next:['09:00–11:00','18:00–20:00'] }
+  ];
+
+  function buildSuggestions(){
+    const list = document.getElementById('provList');
+    if(!list) return;
+    list.innerHTML = '';
+    const matches = PROVIDERS.filter(p => !S.window || p.windows.includes(S.window));
+    (matches.length ? matches : PROVIDERS).forEach((p,i)=>{
+      const card = document.createElement('div');
+      card.className = 'provider';
+      card.innerHTML = `
+        <div class="avatar" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="prov-name">${p.name}</div>
+          <div class="prov-meta"><span class="rating">★ ${p.rating.toFixed(1)}</span> · ${p.reviews} reviews</div>
+          <div class="kv"><span class="badge">ETA</span><span>${p.eta}</span></div>
+          <div class="kv"><span class="badge">Works</span><span>${S.appliance || 'Appliances'}</span></div>
+          <div class="kv"><span class="badge">Next</span><span>${p.next.join(' · ')}</span></div>
+          <div class="row" style="margin-top:8px;">
+            <a href="#04_Confirm_Appointment" class="btn secondary" data-index="${i}">Choose</a>
+          </div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+
+    // bind choose buttons
+    list.querySelectorAll('a.btn.secondary').forEach(a=>{
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        const idx = +a.getAttribute('data-index');
+        S.provider = (matches.length ? matches : PROVIDERS)[idx];
+        go('04_Confirm_Appointment');
+        fillConfirmation();
+      });
+    });
+  }
+
+  function fillConfirmation(){
+    // summary on confirm screen
+    const sumAppliance = document.getElementById('sumAppliance');
+    const sumIssue = document.getElementById('sumIssue');
+    const sumDay = document.getElementById('sumDay');
+    const sumWindow = document.getElementById('sumWindow');
+    const sumSlot = document.getElementById('sumSlot');
+    const sumProv = document.getElementById('sumProvider');
+
+    if(sumAppliance) sumAppliance.textContent = S.appliance || 'Appliance';
+    if(sumIssue) sumIssue.textContent = S.issue || '—';
+    if(sumDay) sumDay.textContent = S.day || '—';
+    if(sumWindow) sumWindow.textContent = S.window || '—';
+    if(sumSlot) sumSlot.textContent = S.slot || (S.provider?.next?.[0] || '—');
+    if(sumProv) sumProv.textContent = S.provider ? `${S.provider.name} (★ ${S.provider.rating.toFixed(1)})` : '—';
+  }
+
+  function confirmAppointment(){
+    // Finalize & go to reminder preview
+    const when = document.getElementById('remWhen');
+    const prov = document.getElementById('remProv');
+    const app = document.getElementById('remApp');
+    const addr = document.getElementById('remAddr');
+
+    if(when) when.textContent = `${S.day || 'Chosen day'} • ${S.slot || (S.provider?.next?.[0] || 'time TBD')}`;
+    if(prov) prov.textContent = S.provider ? S.provider.name : 'Assigned provider';
+    if(app) app.textContent = S.appliance || 'Appliance';
+    if(addr) addr.textContent = document.getElementById('addrText')?.value || 'Saved home address';
+
+    go('05_Reminder_Preview');
+  }
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_ScheduleVisit">
+  <div class="title">Schedule a Visit – Appliance Repair</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Fix a malfunctioning stove within the week, with a planned home visit.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: At home, using laptop</span>
+      <span class="badge">Starting point: After browsing repair services</span>
+      <span class="badge">Relevance: Time-based coordination & commitment</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body">
+      <li>Describe issue & choose appliance</li>
+      <li>Pick preferred day/time window</li>
+      <li>See available provider suggestions</li>
+      <li>Choose provider & confirm</li>
+      <li>Receive automatic reminder</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Issue_Appliance" class="btn primary" onclick="return go('01_Issue_Appliance')">Start scheduling</a>
+  </div>
+</section>
+
+<!-- 01 Describe issue & choose appliance -->
+<section class="screen" id="01_Issue_Appliance">
+  <div class="title">Describe the issue</div>
+  <div class="col">
+    <label class="label" for="issueText">What happened?</label>
+    <textarea id="issueText" placeholder="E.g., Stove won’t ignite on front-left burner. Smell of gas when trying."></textarea>
+  </div>
+
+  <div class="card">
+    <div class="label">Appliance type</div>
+    <div id="applianceChips" class="chips">
+      <span class="chip" onclick="chooseAppliance(this,'Stove')">Stove</span>
+      <span class="chip" onclick="chooseAppliance(this,'Oven')">Oven</span>
+      <span class="chip" onclick="chooseAppliance(this,'Cooktop')">Cooktop</span>
+      <span class="chip" onclick="chooseAppliance(this,'Refrigerator')">Refrigerator</span>
+      <span class="chip" onclick="chooseAppliance(this,'Dishwasher')">Dishwasher</span>
+      <span class="chip" onclick="chooseAppliance(this,'Washer/Dryer')">Washer/Dryer</span>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Preferences_DayTime" class="btn primary" onclick="syncIssue(); return go('02_Preferences_DayTime')">Continue</a>
+    <a href="#00_Context_ScheduleVisit" class="btn secondary" onclick="return go('00_Context_ScheduleVisit')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Preferred day/time window -->
+<section class="screen" id="02_Preferences_DayTime">
+  <div class="title">Preferred day & time</div>
+
+  <div class="card">
+    <div class="label">Pick a day (within a week)</div>
+    <div class="week">
+      <div class="day" onclick="pickDay(this,'Mon')">Mon</div>
+      <div class="day" onclick="pickDay(this,'Tue')">Tue</div>
+      <div class="day" onclick="pickDay(this,'Wed')">Wed</div>
+      <div class="day" onclick="pickDay(this,'Thu')">Thu</div>
+      <div class="day" onclick="pickDay(this,'Fri')">Fri</div>
+      <div class="day" onclick="pickDay(this,'Sat')">Sat</div>
+      <div class="day" onclick="pickDay(this,'Sun')">Sun</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Time window</div>
+    <div id="windowChips" class="chips">
+      <span class="chip" onclick="pickWindow(this,'Morning')">Morning</span>
+      <span class="chip" onclick="pickWindow(this,'Afternoon')">Afternoon</span>
+      <span class="chip" onclick="pickWindow(this,'Evening')">Evening</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Specific slot (optional)</div>
+    <div class="slot-row">
+      <span class="slot" onclick="pickSlot(this,'09:00–11:00')">09:00–11:00</span>
+      <span class="slot" onclick="pickSlot(this,'10:00–12:00')">10:00–12:00</span>
+      <span class="slot" onclick="pickSlot(this,'12:00–14:00')">12:00–14:00</span>
+      <span class="slot" onclick="pickSlot(this,'14:00–16:00')">14:00–16:00</span>
+      <span class="slot" onclick="pickSlot(this,'16:00–18:00')">16:00–18:00</span>
+      <span class="slot" onclick="pickSlot(this,'18:00–20:00')">18:00–20:00</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <label class="label" for="addrText">Visit address</label>
+    <input id="addrText" class="input" placeholder="Strada Exemplu 12, Cluj-Napoca" />
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Suggestions_Providers" class="btn primary" onclick="buildSuggestions(); return go('03_Suggestions_Providers')">See suggestions</a>
+    <a href="#01_Issue_Appliance" class="btn secondary" onclick="return go('01_Issue_Appliance')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Provider suggestions -->
+<section class="screen" id="03_Suggestions_Providers">
+  <div class="title">Available providers</div>
+  <div class="body muted">Based on your window & location</div>
+
+  <div id="provList" class="col">
+    <!-- Filled by JS -->
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Preferences_DayTime" class="btn secondary" onclick="return go('02_Preferences_DayTime')">Adjust time</a>
+  </div>
+</section>
+
+<!-- 04 Confirm appointment -->
+<section class="screen" id="04_Confirm_Appointment">
+  <div class="title">Confirm appointment</div>
+
+  <div class="card">
+    <div class="label">Provider</div>
+    <div class="body" id="sumProvider">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Appliance</div>
+    <div class="body" id="sumAppliance">—</div>
+    <div class="label" style="margin-top:8px;">Issue</div>
+    <div class="body" id="sumIssue" style="white-space:pre-wrap;">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">When</div>
+    <div class="body"><span id="sumDay">—</span> • <span id="sumWindow">—</span> • <span id="sumSlot">—</span></div>
+    <div class="label" style="margin-top:8px;">Address</div>
+    <div class="body" id="sumAddr">Will use provided address</div>
+    <script>
+      // keep address summary updated
+      window.addEventListener('input', ()=>{
+        const sumAddr=document.getElementById('sumAddr');
+        const addr=document.getElementById('addrText')?.value || '';
+        if(sumAddr) sumAddr.textContent = addr || 'Will use provided address';
+      });
+      // also fill summary immediately when arriving
+      window.addEventListener('hashchange', ()=>{
+        if(location.hash==='#04_Confirm_Appointment'){ fillConfirmation(); }
+      });
+    </script>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Reminder_Preview" class="btn primary" onclick="confirmAppointment(); return false;">Confirm visit</a>
+    <a href="#03_Suggestions_Providers" class="btn secondary" onclick="return go('03_Suggestions_Providers')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Reminder preview -->
+<section class="screen" id="05_Reminder_Preview">
+  <div class="title">Appointment scheduled ✅</div>
+
+  <div class="card">
+    <div class="label">When</div>
+    <div class="body" id="remWhen">Chosen day • slot</div>
+    <div class="label" style="margin-top:8px;">Provider</div>
+    <div class="body" id="remProv">Assigned provider</div>
+    <div class="label" style="margin-top:8px;">Appliance</div>
+    <div class="body" id="remApp">Stove</div>
+    <div class="label" style="margin-top:8px;">Address</div>
+    <div class="body" id="remAddr">Saved home address</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Reminder</div>
+    <div class="row" style="justify-content:space-between;">
+      <div class="body"><b>Auto reminder set</b> — 24h before the visit</div>
+      <span class="badge">Push · Email</span>
+    </div>
+    <div class="row" style="margin-top:8px; gap:8px;">
+      <a class="btn ghost" onclick="alert('Reminder adjusted to 2h before (demo).');">Adjust to 2h</a>
+      <a class="btn ghost" onclick="alert('Reminder turned off (demo).');">Turn off</a>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_ScheduleVisit" class="btn primary" onclick="return go('00_Context_ScheduleVisit')">Done</a>
+  </div>
+</section>
+
+</body>
+</html>

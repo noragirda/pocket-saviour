@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ServEase – Task 10: Update Work Status & Upload Proof (Mobile)</title>
+<style>
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-m:12px; --radius-l:16px;
+    --space-s:8px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  .screen{
+    width:390px; min-height:844px; margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l); box-sizing:border-box;
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700;}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:8px 0;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .row{display:flex; gap:12px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea{
+    width:100%; border:1px solid var(--neutral-200); border-radius:12px; background:#fff; padding:8px 12px; box-sizing:border-box;
+  }
+  textarea{min-height:100px; resize:vertical;}
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:12px; padding:0 16px; font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+  .media-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .media-tile{
+    width:110px; height:110px; border:1px solid var(--neutral-200); border-radius:16px;
+    background:linear-gradient(135deg,#eff6ff,#e2e8f0);
+    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; text-align:center;
+  }
+  .status{display:inline-flex; gap:6px; align-items:center; font-size:12px;}
+  .status.pending{color:var(--warning-500);}
+  .status.ok{color:var(--success-500);}
+  .timeline{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .dot{width:10px; height:10px; border-radius:5px; background:var(--neutral-200);}
+  .dot.active{background:var(--primary-500);}
+</style>
+<script>
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  const Job = {
+    id: "JOB-2471",
+    title: "Kitchen outlet repair",
+    address: "Strada Exemplu 12, Cluj",
+    scheduled: "Today, 14:00–15:00"
+  };
+
+  const Completion = {
+    media: [],
+    note: "",
+    queued: false
+  };
+
+  function renderMedia(){
+    const wrap = document.getElementById('mediaZone');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(!Completion.media.length){
+      wrap.innerHTML = '<div class="body muted">No media added yet.</div>';
+      return;
+    }
+    Completion.media.forEach((m,i)=>{
+      const tile = document.createElement('div');
+      tile.className = 'media-tile';
+      tile.innerHTML = `<div style="font-size:30px;">${m==='before'?'⬅️':'✅'}</div><div class="body" style="font-size:12px;">${m==='before'?'Before':'After'} ${i+1}</div>`;
+      wrap.appendChild(tile);
+    });
+  }
+
+  function addMedia(type){
+    Completion.media.push(type);
+    renderMedia();
+  }
+
+  function syncNote(){
+    const t = document.getElementById('summaryNote');
+    Completion.note = t ? t.value.trim() : '';
+  }
+
+  function submitCompletion(){
+    // simulate limited connectivity
+    Completion.queued = true;
+    const q = document.getElementById('queueBanner');
+    if(q) q.style.display = 'flex';
+    const notePrev = document.getElementById('notePreview');
+    if(notePrev) notePrev.textContent = Completion.note || '—';
+    const mediaPrev = document.getElementById('mediaPreview');
+    if(mediaPrev){
+      mediaPrev.innerHTML = '';
+      if(!Completion.media.length){
+        mediaPrev.innerHTML = '<div class="body muted">No media attached.</div>';
+      } else {
+        Completion.media.forEach(m=>{
+          const span = document.createElement('span');
+          span.className = 'badge';
+          span.textContent = m==='before' ? 'Before photo' : 'After photo';
+          mediaPrev.appendChild(span);
+        });
+      }
+    }
+    go('04_Completion_Submitted');
+  }
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_UpdateWork">
+  <div class="title">Update Work Status</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Close a job formally, upload proof, and keep your track record verified.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: On-site, after completion</span>
+      <span class="badge">Limited connectivity possible</span>
+      <span class="badge">Starting: Active job details</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body" style="padding-left:20px;">
+      <li>Mark work as completed</li>
+      <li>Add before/after photo or note</li>
+      <li>Submit completion</li>
+      <li>Receive beneficiary feedback notification</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Active_Job" class="btn primary" onclick="return go('01_Active_Job')">Open active job</a>
+  </div>
+</section>
+
+<!-- 01 Active job details -->
+<section class="screen" id="01_Active_Job">
+  <div class="title">Active job</div>
+
+  <div class="card">
+    <div class="label">Job</div>
+    <div class="body"><b id="jobTitle">Kitchen outlet repair</b></div>
+    <div class="label" style="margin-top:4px;">Address</div>
+    <div class="body" id="jobAddr">Strada Exemplu 12, Cluj</div>
+    <div class="label" style="margin-top:4px;">Schedule</div>
+    <div class="body" id="jobTime">Today, 14:00–15:00</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Status</div>
+    <div class="status">● In progress</div>
+    <div class="body muted">Once finished, mark as completed to notify the client.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Mark_Completed" class="btn primary" onclick="return go('02_Mark_Completed')">Mark as completed</a>
+    <a href="#00_Context_UpdateWork" class="btn secondary" onclick="return go('00_Context_UpdateWork')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Mark work as completed -->
+<section class="screen" id="02_Mark_Completed">
+  <div class="title">Mark work as completed</div>
+  <div class="body muted">This will prepare the job for closing, but you can still add proof.</div>
+
+  <div class="card">
+    <div class="label">Completion status</div>
+    <div class="status ok">● Completed on-site</div>
+    <div class="body muted">Client will be notified after proof upload.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Add_Proof" class="btn primary" onclick="return go('03_Add_Proof')">Add proof</a>
+    <a href="#01_Active_Job" class="btn secondary" onclick="return go('01_Active_Job')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Add optional photos / note -->
+<section class="screen" id="03_Add_Proof">
+  <div class="title">Proof of completion</div>
+  <div class="body muted">Add before/after photos or a short summary. Helpful if client is not on-site.</div>
+
+  <div class="card">
+    <div class="label">Media</div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <a class="btn ghost" onclick="addMedia('before')">📷 Add “before” photo</a>
+      <a class="btn ghost" onclick="addMedia('after')">📸 Add “after” photo</a>
+    </div>
+    <div id="mediaZone" class="media-grid" style="margin-top:8px;">
+      <!-- media here -->
+    </div>
+  </div>
+
+  <div class="col">
+    <label class="label" for="summaryNote">Summary note (optional)</label>
+    <textarea id="summaryNote" placeholder="E.g., Replaced faulty outlet, tested successfully, area left clean." oninput="syncNote()"></textarea>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Completion_Submitted" class="btn primary" onclick="submitCompletion(); return false;">Submit completion</a>
+    <a href="#02_Mark_Completed" class="btn secondary" onclick="return go('02_Mark_Completed')">Back</a>
+  </div>
+
+  <script>renderMedia();</script>
+</section>
+
+<!-- 04 Submission + limited connectivity -->
+<section class="screen" id="04_Completion_Submitted">
+  <div class="title">Completion submitted ✅</div>
+  <div id="queueBanner" class="card" style="display:none; background:rgba(250,204,21,.12); border-color:rgba(250,204,21,.3);">
+    <div class="label">Limited connectivity</div>
+    <div class="body muted">We queued your photos. They’ll sync when the connection improves.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Proof</div>
+    <div id="mediaPreview" class="row" style="gap:8px; flex-wrap:wrap;">
+      <!-- filled after submit -->
+    </div>
+    <div class="label" style="margin-top:8px;">Note</div>
+    <div id="notePreview" class="body muted">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">What happens now</div>
+    <ul class="body" style="padding-left:20px;">
+      <li>Client will receive a completion notification</li>
+      <li>They can add feedback/rating</li>
+      <li>This job becomes part of your verified history</li>
+    </ul>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Wait_Feedback" class="btn primary" onclick="return go('05_Wait_Feedback')">Wait for feedback</a>
+    <a href="#00_Context_UpdateWork" class="btn secondary" onclick="return go('00_Context_UpdateWork')">Back to flow</a>
+  </div>
+</section>
+
+<!-- 05 Await beneficiary feedback -->
+<section class="screen" id="05_Wait_Feedback">
+  <div class="title">Awaiting beneficiary feedback</div>
+  <div class="body muted">We’ve notified the client that the job is done.</div>
+
+  <div class="card">
+    <div class="label">Job</div>
+    <div class="body"><b>Kitchen outlet repair</b> • JOB-2471</div>
+    <div class="label" style="margin-top:8px;">Status</div>
+    <div class="status pending">● Pending client feedback</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Timeline</div>
+    <div class="timeline">
+      <span class="dot active"></span><span class="body" style="font-size:12px;">Work completed</span>
+      <span class="dot active"></span><span class="body" style="font-size:12px;">Proof submitted</span>
+      <span class="dot"></span><span class="body" style="font-size:12px;">Client feedback</span>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_UpdateWork" class="btn primary" onclick="return go('00_Context_UpdateWork')">Back to flow</a>
+  </div>
+</section>
+
+</body>
+</html>

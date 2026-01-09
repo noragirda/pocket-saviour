@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ServEase – Task 6: Report Issue / Refund (Mobile)</title>
+<style>
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-m:12px; --radius-l:16px;
+    --space-s:8px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  .screen{
+    width:390px; min-height:844px; margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l); box-sizing:border-box;
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:8px 0;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .row{display:flex; gap:12px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea, select{
+    width:100%; border:1px solid var(--neutral-200); border-radius:12px; background:#fff;
+    padding:8px 12px; box-sizing:border-box;
+  }
+  textarea{min-height:110px; resize:vertical;}
+  .btn{
+    display:flex; align-items:center; justify-content:center; height:48px;
+    border-radius:12px; padding:0 16px; font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+  .history-item{
+    border:1px solid var(--neutral-200); border-radius:16px; padding:12px; background:#fff;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .avatar{width:40px; height:40px; border-radius:20px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .hist-title{font-weight:700; color:var(--neutral-900);}
+  .hist-meta{font-size:14px; color:var(--neutral-700);}
+  .media-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .media-tile{
+    width:110px; height:110px; border:1px solid var(--neutral-200); border-radius:16px;
+    background:linear-gradient(135deg,#eff6ff,#e2e8f0);
+    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:4px;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    display:inline-flex; align-items:center; height:36px; padding:0 16px;
+    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
+  .status{display:inline-flex; gap:6px; align-items:center; font-size:12px;}
+  .status.success{color:var(--success-500);}
+  .status.pending{color:var(--warning-500);}
+</style>
+<script>
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  // demo state
+  const ServiceHistory = [
+    {id:501, title:"Kitchen sink leak", provider:"Andrei Pop – Plumbing", date:"Oct 21, 2025", price:"180 RON"},
+    {id:502, title:"Dishwasher install", provider:"Casa Tech SRL", date:"Oct 18, 2025", price:"250 RON"},
+    {id:503, title:"Electrical switch fix", provider:"Ion Volt", date:"Oct 12, 2025", price:"150 RON"}
+  ];
+  const Claim = {
+    serviceId:null,
+    complaint:"",
+    media:[],
+    resolution:"",
+    caseNo:null
+  };
+
+  function renderHistory(){
+    const list = document.getElementById('historyList');
+    if(!list) return;
+    list.innerHTML = '';
+    ServiceHistory.forEach(s=>{
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <div class="avatar" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="row" style="justify-content:space-between; align-items:flex-start;">
+            <div class="col" style="gap:2px;">
+              <div class="hist-title">${s.title}</div>
+              <div class="hist-meta">${s.provider}</div>
+              <div class="hist-meta">${s.date} • ${s.price}</div>
+            </div>
+            <a class="btn ghost" data-id="${s.id}">Select</a>
+          </div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('a.btn.ghost').forEach(a=>{
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        const id = +a.getAttribute('data-id');
+        selectService(id);
+      });
+    });
+  }
+
+  function selectService(id){
+    Claim.serviceId = id;
+    // Fill summary in next screens
+    const s = ServiceHistory.find(x=>x.id===id);
+    const sum1 = document.getElementById('serviceSummary');
+    const sum2 = document.getElementById('serviceSummary2');
+    if(sum1) sum1.textContent = s ? `${s.title} – ${s.provider}` : '—';
+    if(sum2) sum2.textContent = s ? `${s.title} – ${s.provider}` : '—';
+    go('02_Complaint_Evidence');
+  }
+
+  function addEvidence(type){
+    Claim.media.push(type);
+    renderEvidence();
+  }
+
+  function renderEvidence(){
+    const wrap = document.getElementById('evidenceZone');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(!Claim.media.length){
+      wrap.innerHTML = '<div class="body muted">No evidence added yet.</div>';
+      return;
+    }
+    Claim.media.forEach((m,i)=>{
+      const tile = document.createElement('div');
+      tile.className = 'media-tile';
+      tile.innerHTML = `<div style="font-size:32px;">${m==='photo'?'📷':'📄'}</div><div class="body" style="font-size:12px;">${m} ${i+1}</div>`;
+      wrap.appendChild(tile);
+    });
+  }
+
+  function syncComplaint(){
+    const t = document.getElementById('complaintText');
+    Claim.complaint = t ? t.value.trim() : '';
+  }
+
+  function chooseResolution(el, value){
+    const group = document.getElementById('resChips');
+    if(group){
+      group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    }
+    el.classList.add('active');
+    Claim.resolution = value;
+  }
+
+  function submitClaim(){
+    // fake case No
+    const rnd = Math.floor(Math.random()*90000)+10000;
+    Claim.caseNo = "CASE-" + rnd;
+    const cn = document.getElementById('caseNumber');
+    if(cn) cn.textContent = Claim.caseNo;
+    const cs = document.getElementById('caseService');
+    if(cs){
+      const s = ServiceHistory.find(x=>x.id===Claim.serviceId);
+      cs.textContent = s ? `${s.title} • ${s.provider}` : '—';
+    }
+    const cr = document.getElementById('caseResolution');
+    if(cr) cr.textContent = Claim.resolution || '—';
+    go('05_Confirmation');
+  }
+
+  window.addEventListener('load', () => {
+    renderHistory();
+    renderEvidence();
+  });
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_ReportRefund">
+  <div class="title">Report an Issue / Request Refund</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Resolve disputes or unsatisfactory outcomes quickly and traceably.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: Post-service frustration</span>
+      <span class="badge">Starting point: Service history</span>
+      <span class="badge">Relevance: Accountability & protection</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body" style="padding-left:20px;">
+      <li>Locate the specific service record</li>
+      <li>Describe complaint & attach evidence</li>
+      <li>Choose resolution preference</li>
+      <li>Submit claim to admins</li>
+      <li>Receive case tracking number</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Locate_Service" class="btn primary" onclick="return go('01_Locate_Service')">Start</a>
+  </div>
+</section>
+
+<!-- 01 Locate service record -->
+<section class="screen" id="01_Locate_Service">
+  <div class="title">Your service history</div>
+  <div class="body muted">Choose the job you’re unhappy with.</div>
+
+  <div id="historyList" class="col">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_ReportRefund" class="btn secondary" onclick="return go('00_Context_ReportRefund')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Describe complaint + evidence -->
+<section class="screen" id="02_Complaint_Evidence">
+  <div class="title">Describe the problem</div>
+  <div class="body muted">Service: <span id="serviceSummary">—</span></div>
+
+  <div class="col">
+    <label class="label" for="complaintText">What went wrong?</label>
+    <textarea id="complaintText" placeholder="E.g., Leak reappeared after 2 days, area not sealed properly, need a redo or refund." oninput="syncComplaint()"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="label">Evidence (optional)</div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <a class="btn ghost" onclick="addEvidence('photo')">📷 Add photo</a>
+      <a class="btn ghost" onclick="addEvidence('doc')">📄 Add invoice / bill</a>
+    </div>
+    <div id="evidenceZone" class="media-grid" style="margin-top:8px;">
+      <!-- files here -->
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Resolution_Preference" class="btn primary" onclick="syncComplaint(); return go('03_Resolution_Preference')">Choose resolution</a>
+    <a href="#01_Locate_Service" class="btn secondary" onclick="return go('01_Locate_Service')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Choose resolution preference -->
+<section class="screen" id="03_Resolution_Preference">
+  <div class="title">How should we fix this?</div>
+  <div class="body muted">We’ll route your claim to an admin.</div>
+
+  <div id="resChips" class="chips">
+    <span class="chip" onclick="chooseResolution(this,'Refund')">Refund</span>
+    <span class="chip" onclick="chooseResolution(this,'Redo service')">Redo service</span>
+    <span class="chip" onclick="chooseResolution(this,'Mediation with provider')">Mediation with provider</span>
+  </div>
+
+  <div class="card">
+    <div class="label">Service</div>
+    <div class="body" id="serviceSummary2">—</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Submit_Claim" class="btn primary" onclick="return go('04_Submit_Claim')">Continue</a>
+    <a href="#02_Complaint_Evidence" class="btn secondary" onclick="return go('02_Complaint_Evidence')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Submit claim -->
+<section class="screen" id="04_Submit_Claim">
+  <div class="title">Submit claim</div>
+  <div class="body muted">We’ll notify admins; you can track status later.</div>
+
+  <div class="card">
+    <div class="label">You’re submitting a claim for:</div>
+    <div class="body" id="serviceSummary3">Same as above</div>
+    <div class="label" style="margin-top:8px;">Complaint</div>
+    <div class="body" id="complaintPreview">Taken from your description</div>
+    <script>
+      // keep preview in sync
+      window.addEventListener('input', ()=>{
+        const cp = document.getElementById('complaintPreview');
+        if(cp) cp.textContent = document.getElementById('complaintText')?.value || '—';
+        const ss3 = document.getElementById('serviceSummary3');
+        const s = ServiceHistory.find(x=>x.id===Claim.serviceId);
+        if(ss3) ss3.textContent = s ? `${s.title} – ${s.provider}` : '—';
+      });
+    </script>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Confirmation" class="btn primary" onclick="submitClaim(); return false;">Submit to admins</a>
+    <a href="#03_Resolution_Preference" class="btn secondary" onclick="return go('03_Resolution_Preference')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Confirmation with case number -->
+<section class="screen" id="05_Confirmation">
+  <div class="title">Claim submitted ✅</div>
+  <div class="body muted">We created a case for your issue. We’ll update you inside the app.</div>
+
+  <div class="card">
+    <div class="label">Case number</div>
+    <div class="body" id="caseNumber">CASE-12345</div>
+    <div class="label" style="margin-top:8px;">Service</div>
+    <div class="body" id="caseService">—</div>
+    <div class="label" style="margin-top:8px;">Requested resolution</div>
+    <div class="body" id="caseResolution">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Status</div>
+    <div class="status pending">● Pending admin review</div>
+    <div class="body muted">Typical response: 24–48h. You can add messages or more evidence.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_ReportRefund" class="btn primary" onclick="return go('00_Context_ReportRefund')">Back to flow</a>
+  </div>
+</section>
+
+</body>
+</html>

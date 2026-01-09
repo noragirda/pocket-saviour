@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ServEase – Task 7: Register as New Provider (Mobile)</title>
+<style>
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-m:12px; --radius-l:16px;
+    --space-s:8px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  .screen{
+    width:390px; min-height:844px; margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l); box-sizing:border-box;
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:8px 0;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .row{display:flex; gap:12px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea, select{
+    width:100%; border:1px solid var(--neutral-200); border-radius:12px; background:#fff; padding:8px 12px; box-sizing:border-box;
+  }
+  textarea{min-height:100px; resize:vertical;}
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:12px; padding:0 16px; font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    display:inline-flex; align-items:center; height:36px; padding:0 16px;
+    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
+  .media-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .upload-tile{
+    width:110px; height:110px; border:1px solid var(--neutral-200); border-radius:16px;
+    background:linear-gradient(135deg,#eff6ff,#e2e8f0);
+    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; text-align:center;
+  }
+  .schedule-grid{display:flex; flex-wrap:wrap; gap:8px;}
+  .schedule-slot{
+    border:1px solid var(--neutral-200); border-radius:12px; padding:6px 10px; background:#fff; font-size:14px; cursor:pointer;
+  }
+  .schedule-slot.active{border-color:var(--primary-500); background:rgba(37,99,235,.05);}
+  .status{display:inline-flex; gap:6px; align-items:center; font-size:12px;}
+  .status.pending{color:var(--warning-500);}
+  .status.ok{color:var(--success-500);}
+</style>
+<script>
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  const Provider = {
+    name:"",
+    phone:"",
+    email:"",
+    docs:[],
+    services:[],
+    area:"",
+    schedule:[],
+    submitted:false
+  };
+
+  function selectChip(groupId, el, value, multiple=false){
+    const group = document.getElementById(groupId);
+    if(!group) return;
+    if(multiple){
+      el.classList.toggle('active');
+    }else{
+      group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+    }
+    return value;
+  }
+
+  function addDoc(type){
+    Provider.docs.push(type);
+    renderDocs();
+  }
+
+  function renderDocs(){
+    const wrap = document.getElementById('docsZone');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(!Provider.docs.length){
+      wrap.innerHTML = '<div class="body muted">No documents uploaded yet.</div>';
+      return;
+    }
+    Provider.docs.forEach((d,i)=>{
+      const tile = document.createElement('div');
+      tile.className = 'upload-tile';
+      tile.innerHTML = `<div style="font-size:30px;">📄</div><div class="body" style="font-size:12px;">${d} ${i+1}</div>`;
+      wrap.appendChild(tile);
+    });
+  }
+
+  function toggleSchedule(el, slot){
+    el.classList.toggle('active');
+    if(el.classList.contains('active')){
+      Provider.schedule.push(slot);
+    }else{
+      Provider.schedule = Provider.schedule.filter(s=>s!==slot);
+    }
+  }
+
+  function submitProfile(){
+    Provider.submitted = true;
+    const list = document.getElementById('submittedServices');
+    if(list){
+      list.innerHTML = '';
+      if(!Provider.services.length){
+        const p = document.createElement('div');
+        p.className = 'body muted';
+        p.textContent = 'No services selected.';
+        list.appendChild(p);
+      } else {
+        Provider.services.forEach(s=>{
+          const p = document.createElement('div');
+          p.className = 'badge';
+          p.textContent = s;
+          list.appendChild(p);
+        });
+      }
+    }
+    const docs = document.getElementById('submittedDocs');
+    if(docs){
+      docs.innerHTML = '';
+      if(!Provider.docs.length){
+        docs.innerHTML = '<div class="body muted">No documents.</div>';
+      }else{
+        Provider.docs.forEach(d=>{
+          const span = document.createElement('span');
+          span.className = 'badge';
+          span.textContent = d;
+          docs.appendChild(span);
+        });
+      }
+    }
+    go('05_Submit_Verification');
+  }
+
+  function addService(el, name){
+    el.classList.toggle('active');
+    if(el.classList.contains('active')){
+      Provider.services.push(name);
+    }else{
+      Provider.services = Provider.services.filter(s=>s!==name);
+    }
+  }
+
+  function syncArea(){
+    const a = document.getElementById('areaInput');
+    Provider.area = a ? a.value.trim() : '';
+  }
+
+  window.addEventListener('load', renderDocs);
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_RegisterProvider">
+  <div class="title">Register as Provider</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Gain visibility and start receiving local job requests.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: home, mobile or desktop</span>
+      <span class="badge">May have limited digital literacy</span>
+      <span class="badge">Starting: Landing page</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body" style="padding-left:20px;">
+      <li>Provide identity & contact</li>
+      <li>Upload credential proofs</li>
+      <li>Select services & coverage</li>
+      <li>Set working schedule</li>
+      <li>Submit for verification</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Identity_Contact" class="btn primary" onclick="return go('01_Identity_Contact')">Start registration</a>
+  </div>
+</section>
+
+<!-- 01 Identity & contact -->
+<section class="screen" id="01_Identity_Contact">
+  <div class="title">Your details</div>
+  <div class="body muted">We need basic info to show clients who you are.</div>
+
+  <div class="col">
+    <label class="label" for="fullName">Full name</label>
+    <input id="fullName" class="input" placeholder="E.g., Andrei Pop"/>
+  </div>
+  <div class="col">
+    <label class="label" for="phone">Phone</label>
+    <input id="phone" class="input" placeholder="+40 7xx xxx xxx"/>
+  </div>
+  <div class="col">
+    <label class="label" for="email">Email</label>
+    <input id="email" type="email" class="input" placeholder="you@example.com"/>
+  </div>
+
+  <div class="card">
+    <div class="label">Tips for beginners</div>
+    <div class="body muted">Use real info so admins can verify you faster.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Upload_Credentials" class="btn primary" onclick="return go('02_Upload_Credentials')">Next: credentials</a>
+    <a href="#00_Context_RegisterProvider" class="btn secondary" onclick="return go('00_Context_RegisterProvider')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Upload credential proofs -->
+<section class="screen" id="02_Upload_Credentials">
+  <div class="title">Credential proofs</div>
+  <div class="body muted">Upload ID and any licenses/certificates. Admins see these, not clients.</div>
+
+  <div class="card">
+    <div class="label">Upload</div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <a class="btn ghost" onclick="addDoc('ID Front')">ID front</a>
+      <a class="btn ghost" onclick="addDoc('ID Back')">ID back</a>
+      <a class="btn ghost" onclick="addDoc('License')">License</a>
+      <a class="btn ghost" onclick="addDoc('Insurance')">Insurance</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Your files</div>
+    <div id="docsZone" class="media-grid"><!-- filled by JS --></div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Services_Area" class="btn primary" onclick="return go('03_Services_Area')">Next: services & area</a>
+    <a href="#01_Identity_Contact" class="btn secondary" onclick="return go('01_Identity_Contact')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Services & coverage -->
+<section class="screen" id="03_Services_Area">
+  <div class="title">What do you offer?</div>
+  <div class="body muted">Pick 1–3 services to start with.</div>
+
+  <div id="servicesChips" class="chips">
+    <span class="chip" onclick="addService(this,'Plumbing')">Plumbing</span>
+    <span class="chip" onclick="addService(this,'Electrical')">Electrical</span>
+    <span class="chip" onclick="addService(this,'Appliance repair')">Appliance repair</span>
+    <span class="chip" onclick="addService(this,'Painting')">Painting</span>
+    <span class="chip" onclick="addService(this,'Carpentry')">Carpentry</span>
+  </div>
+
+  <div class="col">
+    <label class="label" for="areaInput">Coverage area</label>
+    <input id="areaInput" class="input" placeholder="E.g., Cluj-Napoca + 15 km" oninput="syncArea()"/>
+    <div class="body muted">You can change this later.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Schedule" class="btn primary" onclick="return go('04_Schedule')">Next: schedule</a>
+    <a href="#02_Upload_Credentials" class="btn secondary" onclick="return go('02_Upload_Credentials')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Working schedule -->
+<section class="screen" id="04_Schedule">
+  <div class="title">Working schedule</div>
+  <div class="body muted">Tap to select the time windows you usually work.</div>
+
+  <div class="card">
+    <div class="label">Weekdays</div>
+    <div class="schedule-grid">
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Mon AM')">Mon AM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Mon PM')">Mon PM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Tue AM')">Tue AM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Tue PM')">Tue PM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Wed AM')">Wed AM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Wed PM')">Wed PM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Thu AM')">Thu AM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Thu PM')">Thu PM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Fri AM')">Fri AM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Fri PM')">Fri PM</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Weekends</div>
+    <div class="schedule-grid">
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Sat AM')">Sat AM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Sat PM')">Sat PM</span>
+      <span class="schedule-slot" onclick="toggleSchedule(this,'Sun AM')">Sun AM</span>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Submit_Verification" class="btn primary" onclick="submitProfile(); return false;">Submit for verification</a>
+    <a href="#03_Services_Area" class="btn secondary" onclick="return go('03_Services_Area')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Submit for verification -->
+<section class="screen" id="05_Submit_Verification">
+  <div class="title">Profile submitted ✅</div>
+  <div class="body muted">Our admins will review your documents and approve your profile.</div>
+
+  <div class="card">
+    <div class="label">Services</div>
+    <div id="submittedServices" class="row" style="gap:8px; flex-wrap:wrap;">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Documents</div>
+    <div id="submittedDocs" class="row" style="gap:8px; flex-wrap:wrap;">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Status</div>
+    <div class="status pending">● Pending admin verification</div>
+    <div class="body muted">We’ll notify you when your profile is live.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_RegisterProvider" class="btn primary" onclick="return go('00_Context_RegisterProvider')">Back to flow</a>
+  </div>
+</section>
+
+</body>
+</html>

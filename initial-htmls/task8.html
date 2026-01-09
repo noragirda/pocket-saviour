@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ServEase – Task 8: Respond to New Job Request (Mobile)</title>
+<style>
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-m:12px; --radius-l:16px;
+    --space-s:8px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  .screen{
+    width:390px; min-height:844px; margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l); box-sizing:border-box;
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700; color:var(--neutral-900);}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200); margin:8px 0;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:12px; padding:0 16px; font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+  .row{display:flex; gap:12px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    display:inline-flex; align-items:center; height:36px; padding:0 16px;
+    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
+  .notif{
+    background:#fff; border:1px solid var(--primary-500); border-radius:16px; padding:12px;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .avatar{width:40px; height:40px; border-radius:20px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .timeline{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .dot{width:10px; height:10px; border-radius:5px; background:var(--neutral-200);}
+  .dot.active{background:var(--primary-500);}
+  .status{display:inline-flex; gap:6px; align-items:center; font-size:12px;}
+  .status.ok{color:var(--success-500);}
+  .status.wait{color:var(--warning-500);}
+</style>
+<script>
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  const Job = {
+    id: 'REQ-32018',
+    title: 'Fix kitchen outlet',
+    desc: 'Client reports outlet not working after small power surge.',
+    location: 'Strada Exemplu 12, Cluj',
+    urgency: 'Fits between 2 PM and 3 PM',
+    distance: '1.4 km',
+    trust: 'High (5★, repeat client)'
+  };
+
+  const State = {
+    autoAccept: false,
+    trustFilter: 'High + Repeat',
+    availability: 'Available in 2–3 PM',
+    calendarAdjusted: false
+  };
+
+  function toggleAuto(el){
+    State.autoAccept = !State.autoAccept;
+    el.classList.toggle('active', State.autoAccept);
+    const text = document.getElementById('autoText');
+    if(text) text.textContent = State.autoAccept ? 'Auto-Accept enabled for high-fit jobs.' : 'Auto-Accept off.';
+  }
+
+  function chooseTrust(el, value){
+    document.querySelectorAll('#trustChips .chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    State.trustFilter = value;
+  }
+
+  function enableAIAdjust(){
+    State.calendarAdjusted = true;
+    const msg = document.getElementById('aiAdjustMsg');
+    if(msg) msg.textContent = 'AI shifted earlier slot to make room at 14:30.';
+  }
+
+  function acceptJob(){
+    go('05_Await_Confirmation');
+  }
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_RespondJob">
+  <div class="title">Respond to a New Job Request</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">
+      Accept or decline an incoming service opportunity, without breaking the current route.
+    </div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: Provider view</span>
+      <span class="badge">Starting point: Notification of pending request</span>
+      <span class="badge">Relevance: Core operational action</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body" style="padding-left:20px;">
+      <li>Review request summary</li>
+      <li>Provider receives push (“fits between 2–3 PM”)</li>
+      <li>Decide availability / enable auto-accept</li>
+      <li>AI adjusts calendar if needed</li>
+      <li>Await beneficiary confirmation</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Review_Summary" class="btn primary" onclick="return go('01_Review_Summary')">Open request</a>
+  </div>
+</section>
+
+<!-- 01 Review request summary -->
+<section class="screen" id="01_Review_Summary">
+  <div class="title">New request</div>
+
+  <div class="card">
+    <div class="label">Job</div>
+    <div class="body"><b id="jobTitle">Fix kitchen outlet</b></div>
+    <div class="label" style="margin-top:4px;">Description</div>
+    <div class="body" id="jobDesc">Client reports outlet not working after small power surge.</div>
+    <div class="label" style="margin-top:4px;">Location</div>
+    <div class="body" id="jobLoc">Strada Exemplu 12, Cluj</div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <span class="badge">Distance: 1.4 km</span>
+      <span class="badge">Urgency: fits 2–3 PM</span>
+      <span class="badge">Client trust: High</span>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#02_Push_Notification_View" class="btn primary" onclick="return go('02_Push_Notification_View')">View notification</a>
+    <a href="#00_Context_RespondJob" class="btn secondary" onclick="return go('00_Context_RespondJob')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Push notification view -->
+<section class="screen" id="02_Push_Notification_View">
+  <div class="title">Notification</div>
+
+  <div class="notif">
+    <div class="avatar" aria-hidden="true"></div>
+    <div class="col" style="gap:4px;">
+      <div class="body"><b>New job nearby fits between your 2 PM and 3 PM slots.</b></div>
+      <div class="body muted">Fix kitchen outlet • 1.4 km away • repeat client</div>
+      <div class="row" style="gap:8px;">
+        <span class="badge">Suggested by AI</span>
+        <span class="badge">Route-friendly</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Why we suggested it</div>
+    <div class="body muted">Your calendar has a gap 14:00–15:00 and travel from current job ≤ 8 min.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Decide_Availability" class="btn primary" onclick="return go('03_Decide_Availability')">Decide availability</a>
+    <a href="#01_Review_Summary" class="btn secondary" onclick="return go('01_Review_Summary')">Back</a>
+  </div>
+</section>
+
+<!-- 03 Decide availability / Auto-Accept -->
+<section class="screen" id="03_Decide_Availability">
+  <div class="title">Availability & Auto-Accept</div>
+  <div class="body muted">Choose if you want to take this job, and how similar jobs should be handled.</div>
+
+  <div class="card">
+    <div class="label">Current slot</div>
+    <div class="body">Free: 14:00–15:00</div>
+    <div class="body muted">Job duration estimate: 35–45 minutes.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Auto-Accept</div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <a id="autoBtn" class="btn ghost" onclick="toggleAuto(this)">Toggle</a>
+      <span id="autoText" class="body muted">Auto-Accept off.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Trust / distance filter</div>
+    <div id="trustChips" class="chips">
+      <span class="chip active" onclick="chooseTrust(this,'High + Repeat')">High + Repeat</span>
+      <span class="chip" onclick="chooseTrust(this,'High Trust only')">High Trust only</span>
+      <span class="chip" onclick="chooseTrust(this,'≤ 2 km')">≤ 2 km</span>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_AI_Adjust_Calendar" class="btn primary" onclick="return go('04_AI_Adjust_Calendar')">Continue</a>
+    <a href="#02_Push_Notification_View" class="btn secondary" onclick="return go('02_Push_Notification_View')">Back</a>
+  </div>
+</section>
+
+<!-- 04 AI adjusts calendar -->
+<section class="screen" id="04_AI_Adjust_Calendar">
+  <div class="title">AI calendar adjustment</div>
+  <div class="body muted">We can slightly shift nearby jobs to accommodate this one.</div>
+
+  <div class="card">
+    <div class="label">Your day</div>
+    <div class="timeline">
+      <span class="dot active"></span><span class="small">Job A – 12:30</span>
+      <span class="dot active"></span><span class="small">Free – 14:00</span>
+      <span class="dot"></span><span class="small">Job B – 15:30</span>
+    </div>
+    <div class="body muted" id="aiAdjustMsg">No adjustments yet.</div>
+    <div class="row" style="gap:8px;">
+      <a class="btn ghost" onclick="enableAIAdjust()">Let AI adjust</a>
+      <a class="btn ghost">Keep current</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">What changes</div>
+    <div class="body muted">If earlier job ends at 13:40, we advance this job to 14:10 automatically.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Await_Confirmation" class="btn primary" onclick="acceptJob(); return false;">Accept job</a>
+    <a href="#03_Decide_Availability" class="btn secondary" onclick="return go('03_Decide_Availability')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Await confirmation from beneficiary -->
+<section class="screen" id="05_Await_Confirmation">
+  <div class="title">Awaiting client confirmation ✅</div>
+  <div class="body muted">You accepted the job. We sent a confirmation to the beneficiary.</div>
+
+  <div class="card">
+    <div class="label">Job</div>
+    <div class="body"><b>Fix kitchen outlet</b> • REQ-32018</div>
+    <div class="label" style="margin-top:8px;">Time window</div>
+    <div class="body">14:00–15:00 (flexible)</div>
+    <div class="label" style="margin-top:8px;">Client</div>
+    <div class="body">Repeat client • High trust</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Status</div>
+    <div class="status wait">● Waiting for beneficiary</div>
+    <div class="body muted">If client doesn’t respond in 10 min, we’ll notify you.</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_RespondJob" class="btn primary" onclick="return go('00_Context_RespondJob')">Back to flow</a>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ServEase – Task 11: Verify Provider Credentials (Mobile)</title>
+<style>
+  /* ===== Tokens (Soft Neutral) ===== */
+  :root{
+    --primary-500:#2563EB; --primary-700:#1E3A8A;
+    --neutral-900:#0F172A; --neutral-700:#334155;
+    --neutral-500:#64748B; --neutral-300:#CBD5E1;
+    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
+    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
+    --radius-s:8px; --radius-m:12px; --radius-l:16px;
+    --space-xs:4px; --space-s:8px; --space-sm:12px; --space-m:16px; --space-l:24px;
+  }
+  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
+  /* ===== Frame ===== */
+  .screen{
+    width:390px; min-height:844px; box-sizing:border-box;
+    margin:20px auto; background:var(--neutral-100);
+    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
+    border:1px solid var(--neutral-200); border-radius:var(--radius-l);
+  }
+  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
+  .subtitle{font-size:18px; line-height:28px; font-weight:700;}
+  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
+  .muted{color:var(--neutral-500);}
+  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
+  .divider{height:1px; background:var(--neutral-200);}
+  /* ===== Components ===== */
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    height:48px; border-radius:12px; padding:0 var(--space-l);
+    font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
+  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
+  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
+  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+
+  .row{display:flex; gap:16px; align-items:center;}
+  .col{display:flex; flex-direction:column; gap:8px;}
+  .card{
+    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
+  .input, textarea, select{
+    width:100%; border:1px solid var(--neutral-200); border-radius:12px;
+    background:#fff; color:var(--neutral-900); padding:8px 12px; box-sizing:border-box;
+  }
+  textarea{min-height:110px; resize:vertical;}
+
+  .queue-item{
+    display:flex; gap:12px; align-items:flex-start; padding:12px; border:1px solid var(--neutral-200);
+    border-radius:16px; background:#fff;
+  }
+  .avatar{width:40px; height:40px; border-radius:20px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .q-name{font-weight:700;}
+  .q-meta{font-size:14px; color:var(--neutral-700);}
+
+  .docgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px;}
+  .doctile{
+    border:1px solid var(--neutral-200); border-radius:16px; padding:12px; background:#fff; display:flex; flex-direction:column; gap:8px;
+  }
+  .docthumb{height:90px; border-radius:12px; border:1px solid var(--neutral-200);
+    background:linear-gradient(135deg,#f1f5f9,#e2e8f0); display:flex; align-items:center; justify-content:center; color:var(--neutral-500); font-size:12px;}
+  .checklist{display:flex; flex-direction:column; gap:8px;}
+  .check{display:flex; gap:8px; align-items:flex-start;}
+  .status-pill{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--neutral-200); background:#fff;}
+  .status-pending{border-color:var(--warning-500); color:var(--warning-500);}
+  .status-approved{border-color:var(--success-500); color:var(--success-500);}
+  .status-rejected{border-color:var(--error-500); color:var(--error-500);}
+</style>
+<script>
+  // Simple nav for preview; html.to.design will import each <section> as its own frame.
+  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+
+  // Demo data/state
+  const Q = [
+    {id:101, name:'Ion Pop', role:'Electrician', submitted:'Today 08:41', docs:['ID Front','ID Back','License','Insurance'], status:'PENDING'},
+    {id:102, name:'Maria Ionescu', role:'Plumber', submitted:'Yesterday 16:10', docs:['ID Front','ID Back','License'], status:'PENDING'},
+    {id:103, name:'Dan Repair SRL', role:'Appliances', submitted:'Today 07:55', docs:['ID Front','ID Back','License','Tax Cert'], status:'PENDING'}
+  ];
+  const State = {
+    selectedId: null,
+    decision: null, // 'APPROVE' | 'REJECT'
+    reason: ''
+  };
+
+  function renderQueue(){
+    const list = document.getElementById('queueList');
+    const count = document.getElementById('queueCount');
+    if(!list) return;
+    list.innerHTML = '';
+    Q.forEach(item=>{
+      const div = document.createElement('div');
+      div.className = 'queue-item';
+      div.innerHTML = `
+        <div class="avatar" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="row" style="justify-content:space-between; align-items:flex-start;">
+            <div class="col" style="gap:2px;">
+              <div class="q-name">${item.name} • <span class="muted">${item.role}</span></div>
+              <div class="q-meta">Submitted: ${item.submitted}</div>
+            </div>
+            <div class="col" style="gap:6px; align-items:flex-end;">
+              <span class="status-pill status-pending">Pending</span>
+              <a class="btn ghost" data-id="${item.id}">Open</a>
+            </div>
+          </div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('a.btn.ghost').forEach(a=>{
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        State.selectedId = +a.getAttribute('data-id');
+        fillApplication();
+        go('02_Application_Detail');
+      });
+    });
+    if(count) count.textContent = `${Q.length} pending`;
+  }
+
+  function getSelected(){ return Q.find(x=>x.id===State.selectedId) || Q[0]; }
+
+  function fillApplication(){
+    const item = getSelected();
+    if(!item) return;
+    // Header
+    const hName = document.getElementById('appName');
+    const hRole = document.getElementById('appRole');
+    const hSub  = document.getElementById('appSubmitted');
+    if(hName) hName.textContent = item.name;
+    if(hRole) hRole.textContent = item.role;
+    if(hSub)  hSub.textContent  = item.submitted;
+
+    // Docs grid
+    const grid = document.getElementById('docGrid');
+    if(grid){
+      grid.innerHTML = '';
+      item.docs.forEach(d=>{
+        const t = document.createElement('div');
+        t.className = 'doctile';
+        t.innerHTML = `
+          <div class="label">${d}</div>
+          <div class="docthumb">Preview • ${d}</div>
+          <div class="row">
+            <span class="badge">Download</span>
+            <span class="badge">View full</span>
+            <span class="badge">Flag</span>
+          </div>
+        `;
+        grid.appendChild(t);
+      });
+    }
+    // Reset checklist & decision
+    document.querySelectorAll('input[type=checkbox]').forEach(c=> c.checked=false);
+    State.decision=null; State.reason='';
+    const rsn = document.getElementById('reasonText'); if(rsn) rsn.value='';
+  }
+
+  function toDocs(){
+    go('03_Review_Documents');
+  }
+
+  function chooseDecision(dec){
+    State.decision = dec; // 'APPROVE' | 'REJECT'
+    go('04_Decision_Reason');
+    const header = document.getElementById('decHeader');
+    const hint   = document.getElementById('decHint');
+    const label  = document.getElementById('reasonLabel');
+    if(dec==='APPROVE'){
+      if(header) header.textContent = 'Approve provider';
+      if(hint)   hint.textContent   = 'Optional note for internal log or provider message.';
+      if(label)  label.textContent  = 'Optional note';
+    }else{
+      if(header) header.textContent = 'Reject provider';
+      if(hint)   hint.textContent   = 'Provide a clear reason. This will be visible to the provider.';
+      if(label)  label.textContent  = 'Rejection reason (required)';
+    }
+  }
+
+  function submitDecision(){
+    const item = getSelected();
+    const text = document.getElementById('reasonText')?.value.trim() || '';
+    State.reason = text;
+    if(State.decision==='REJECT' && !text){
+      alert('Please provide a rejection reason.');
+      return;
+    }
+    // Update confirmation
+    const cName = document.getElementById('confName');
+    const cRole = document.getElementById('confRole');
+    const cStatus = document.getElementById('confStatus');
+    const cReason = document.getElementById('confReason');
+
+    if(cName) cName.textContent = item?.name || '—';
+    if(cRole) cRole.textContent = item?.role || '—';
+    if(cStatus) {
+      cStatus.textContent = State.decision==='APPROVE' ? 'Approved' : 'Rejected';
+      cStatus.className = 'status-pill ' + (State.decision==='APPROVE' ? 'status-approved' : 'status-rejected');
+    }
+    if(cReason) cReason.textContent = State.reason || '—';
+
+    go('05_Status_Updated');
+  }
+
+  window.addEventListener('load', renderQueue);
+</script>
+</head>
+<body>
+
+<!-- 00 Context -->
+<section class="screen" id="00_Context_VerifyCredentials">
+  <div class="title">Verify Provider Credentials</div>
+  <div class="card">
+    <div class="subtitle">Purpose & Motivation</div>
+    <div class="body">Ensure only legitimate professionals operate on the platform.</div>
+    <div class="divider"></div>
+    <div class="row" style="flex-wrap:wrap; gap:8px;">
+      <span class="badge">Context: Admin workspace</span>
+      <span class="badge">Starting point: Pending-verification queue</span>
+      <span class="badge">Relevance: Reliability & trust</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Flow steps</div>
+    <ol class="body">
+      <li>Open provider’s application entry</li>
+      <li>Cross-check uploaded documents</li>
+      <li>Approve or reject with reason</li>
+      <li>Update provider status accordingly</li>
+    </ol>
+  </div>
+  <div class="sticky-actions">
+    <a href="#01_Queue_List" class="btn primary" onclick="return go('01_Queue_List')">Open queue</a>
+  </div>
+</section>
+
+<!-- 01 Queue list -->
+<section class="screen" id="01_Queue_List">
+  <div class="title">Pending Verification</div>
+  <div class="row" style="justify-content:space-between;">
+    <div id="queueCount" class="body muted">—</div>
+    <div class="row" style="gap:8px;">
+      <span class="badge">Filter: All</span>
+      <span class="badge">Sort: Newest</span>
+    </div>
+  </div>
+
+  <div id="queueList" class="col"><!-- filled by JS --></div>
+
+  <div class="sticky-actions">
+    <a href="#00_Context_VerifyCredentials" class="btn secondary" onclick="return go('00_Context_VerifyCredentials')">Back</a>
+  </div>
+</section>
+
+<!-- 02 Application detail -->
+<section class="screen" id="02_Application_Detail">
+  <div class="title">Application</div>
+
+  <div class="card">
+    <div class="label">Provider</div>
+    <div class="row" style="justify-content:space-between; align-items:flex-start;">
+      <div class="col" style="gap:2px;">
+        <div id="appName" class="body"><b>—</b></div>
+        <div id="appRole" class="body muted">—</div>
+      </div>
+      <span class="status-pill status-pending">Pending</span>
+    </div>
+    <div class="label" style="margin-top:8px;">Submitted</div>
+    <div id="appSubmitted" class="body muted">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Quick checks</div>
+    <div class="checklist">
+      <label class="check"><input type="checkbox"/> <span class="body">Name matches ID</span></label>
+      <label class="check"><input type="checkbox"/> <span class="body">ID valid & not expired</span></label>
+      <label class="check"><input type="checkbox"/> <span class="body">License authentic & current</span></label>
+      <label class="check"><input type="checkbox"/> <span class="body">Photo face matches selfie</span></label>
+      <label class="check"><input type="checkbox"/> <span class="body">Insurance / Tax certificate (if required)</span></label>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#03_Review_Documents" class="btn primary" onclick="toDocs(); return false;">Review documents</a>
+    <a href="#01_Queue_List" class="btn secondary" onclick="return go('01_Queue_List')">Back to queue</a>
+  </div>
+</section>
+
+<!-- 03 Cross-check documents -->
+<section class="screen" id="03_Review_Documents">
+  <div class="title">Documents</div>
+  <div id="docGrid" class="docgrid"><!-- filled by JS --></div>
+
+  <div class="card">
+    <div class="label">Notes (private)</div>
+    <textarea placeholder="E.g., License registry check OK • Insurance coverage valid until 2026-12-31"></textarea>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#04_Decision_Reason" class="btn primary" onclick="chooseDecision('APPROVE'); return false;">Approve</a>
+    <a href="#04_Decision_Reason" class="btn secondary" onclick="chooseDecision('REJECT'); return false;">Reject</a>
+    <a href="#02_Application_Detail" class="btn ghost" onclick="return go('02_Application_Detail')">Back</a>
+  </div>
+</section>
+
+<!-- 04 Decision & reason -->
+<section class="screen" id="04_Decision_Reason">
+  <div id="decHeader" class="title">Approve provider</div>
+  <div id="decHint" class="body muted">Optional note for internal log or provider message.</div>
+
+  <div class="card">
+    <div id="reasonLabel" class="label">Optional note</div>
+    <textarea id="reasonText" placeholder="E.g., All documents valid and clear. Welcome aboard!"></textarea>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#05_Status_Updated" class="btn primary" onclick="submitDecision(); return false;">Submit decision</a>
+    <a href="#03_Review_Documents" class="btn secondary" onclick="return go('03_Review_Documents')">Back</a>
+  </div>
+</section>
+
+<!-- 05 Status updated -->
+<section class="screen" id="05_Status_Updated">
+  <div class="title">Status updated ✅</div>
+
+  <div class="card">
+    <div class="label">Provider</div>
+    <div class="body"><b id="confName">—</b> • <span id="confRole" class="muted">—</span></div>
+    <div class="label" style="margin-top:8px;">New status</div>
+    <div><span id="confStatus" class="status-pill status-approved">Approved</span></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Decision note</div>
+    <div id="confReason" class="body" style="white-space:pre-wrap;">—</div>
+  </div>
+
+  <div class="sticky-actions">
+    <a href="#01_Queue_List" class="btn primary" onclick="return go('01_Queue_List')">Back to queue</a>
+    <a href="#00_Context_VerifyCredentials" class="btn secondary" onclick="return go('00_Context_VerifyCredentials')">Flow context</a>
+  </div>
+</section>
+
+</body>
+</html>
