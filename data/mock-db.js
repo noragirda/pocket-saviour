@@ -11,3 +11,18 @@ export const PLUMBERS = [
   { id: "p3", name: "Rareș Dima", rating: 4.6, distanceKm: 8.2, visitFee: 90,  warranty: "No warranty", etaMin: 80 },
   { id: "p4", name: "Vlad Iuga", rating: 4.8, distanceKm: 12.5, visitFee: 200, warranty: "12 months", etaMin: 70 },
 ];
+
+export const APPLIANCE_TECHNICIANS = [
+  { id: "a1", name: "Sorin Dinu", rating: 4.8, etaDays: 1, visitFee: 140, speciality: "Kitchen appliances" },
+  { id: "a2", name: "Ioana Rusu", rating: 4.9, etaDays: 2, visitFee: 170, speciality: "Washing machines" },
+  { id: "a3", name: "Cătălin Mureșan", rating: 4.6, etaDays: 3, visitFee: 120, speciality: "General repairs" },
+];
+
+export const TIME_SLOTS = [
+  "08:00–10:00",
+  "10:00–12:00",
+  "12:00–14:00",
+  "14:00–16:00",
+  "16:00–18:00",
+];
+

@@ -1,6 +1,5 @@
 import { createRouter } from "./router.js";
 import { HomeScreen } from "./screens/home.js";
-import { Task3Screen } from "./screens/task3.js";
 import { 
     Task1Context, 
     Task1Category, 
@@ -9,14 +8,23 @@ import {
     Task1Providers, 
     Task1Confirm } 
   from "./screens/task1.js";
-// import {
-//   Task2Context,
-//   Task2SearchFilters,
-//   Task2Results,
-//   Task2CompareSaved,
-//   Task2Message,
-//   Task2Confirm
-// } from "./screens/task2.js";
+import {
+  Task2Context,
+  Task2SearchFilters,
+  Task2Results,
+  Task2CompareSaved,
+  Task2Message,
+  Task2Confirm
+} from "./screens/task2.js";
+import {
+  Task3Context,
+  Task3ApplianceIssue,
+  Task3Schedule,
+  Task3Providers,
+  Task3Confirm,
+  Task3Success
+} from "./screens/task3.js";
+
 
 
 const appEl = document.getElementById("app");
@@ -36,14 +44,22 @@ const router = createRouter({
     "#/task1/providers": () => Task1Providers({ mount, router }),
     "#/task1/confirm": () => Task1Confirm({ mount, router }),
 
-    // "#/task2": () => router.navigate("#/task2/context"),
-    // "#/task2/context": () => Task2Context({ mount, router }),
-    // "#/task2/filters": () => Task2SearchFilters({ mount, router }),
-    // "#/task2/results": () => Task2Results({ mount, router }),
-    // "#/task2/compare": () => Task2CompareSaved({ mount, router }),
-    // "#/task2/message": () => Task2Message({ mount, router }),
-    // "#/task2/confirm": () => Task2Confirm({ mount, router }),
-    "#/task3": () => Task3Screen({ mount, router }),
+    "#/task2": () => router.navigate("#/task2/context"),
+    "#/task2/context": () => Task2Context({ mount, router }),
+    "#/task2/filters": () => Task2SearchFilters({ mount, router }),
+    "#/task2/results": () => Task2Results({ mount, router }),
+    "#/task2/compare": () => Task2CompareSaved({ mount, router }),
+    "#/task2/message": () => Task2Message({ mount, router }),
+    "#/task2/confirm": () => Task2Confirm({ mount, router }),
+    
+    "#/task3": () => router.navigate("#/task3/context"),
+    "#/task3/context": () => Task3Context({ mount, router }),
+    "#/task3/details": () => Task3ApplianceIssue({ mount, router }),
+    "#/task3/schedule": () => Task3Schedule({ mount, router }),
+    "#/task3/providers": () => Task3Providers({ mount, router }),
+    "#/task3/confirm": () => Task3Confirm({ mount, router }),
+    "#/task3/success": () => Task3Success({ mount, router }),
+
   },
   onNotFound: () => {
     mount(`

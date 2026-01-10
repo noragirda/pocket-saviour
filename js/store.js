@@ -32,7 +32,19 @@ const DEFAULT_STORE = {
   selectedProviderId: null,      // for contact / booking
   messageDraft: "",              // mock chat message
   bookingStatus: "draft"         // draft | confirmed
+},
+task3: {
+  appliance: null,              // "Stove", "Washing machine", etc.
+  issue: "",                    // description
+  urgency: null,               // "Today" | "This week"
+  date: "",                    // YYYY-MM-DD
+  timeSlot: "",                // "10:00–12:00"
+  address: "",                 // prefill from user
+  selectedProviderId: null,
+  notes: "",
+  bookingStatus: "draft"       // draft | confirmed
 }
+
 
 };
 
