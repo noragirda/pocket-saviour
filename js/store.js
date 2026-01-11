@@ -43,6 +43,30 @@ task3: {
   selectedProviderId: null,
   notes: "",
   bookingStatus: "draft"       // draft | confirmed
+},
+task4: {
+  files: [],                    // Array of {type: 'photo'|'video'|'file', id: unique}
+  clarificationText: "",        // User's note
+  requestId: "1842",            // Mock request ID
+  requestTitle: "Power issue in kitchen",
+  providerName: "Ion Pop – Electrician",
+  status: "draft"               // draft | sent
+},
+task8: {
+  autoAccept: false,            // Auto-accept high-fit jobs
+  trustFilter: 'High + Repeat', // Trust level filter
+  availability: 'Available in 2–3 PM',
+  calendarAdjusted: false,      // Whether AI adjusted calendar
+  jobAccepted: false,           // Job acceptance status
+  status: "pending"             // pending | accepted | declined
+},
+task12: {
+  selectedId: null,             // Selected dispute case ID
+  decision: null,               // Resolution: refund, provider-wins, redo, split
+  complainantMessage: "",       // Message to complainant
+  providerMessage: "",          // Message to provider
+  moderatorNote: "",            // Admin's decision note
+  status: "pending"             // pending | resolved
 }
 
 

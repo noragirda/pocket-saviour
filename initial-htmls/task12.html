@@ -1,79 +1,53 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ServEase – Task 12: Moderate Disputes (Mobile)</title>
-<style>
-  :root{
-    --primary-500:#2563EB; --primary-700:#1E3A8A;
-    --neutral-900:#0F172A; --neutral-700:#334155;
-    --neutral-500:#64748B; --neutral-300:#CBD5E1;
-    --neutral-200:#E2E8F0; --neutral-100:#F8FAFC; --neutral-0:#FFFFFF;
-    --success-500:#16A34A; --warning-500:#EAB308; --error-500:#DC2626;
-    --radius-m:12px; --radius-l:16px;
-    --space-s:8px; --space-m:16px; --space-l:24px;
-  }
-  html,body{margin:0;padding:0;background:var(--neutral-100);color:var(--neutral-900);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;}
-  .screen{
-    width:390px; min-height:844px; margin:20px auto; background:var(--neutral-100);
-    padding:var(--space-l); display:flex; flex-direction:column; gap:var(--space-m);
-    border:1px solid var(--neutral-200); border-radius:var(--radius-l); box-sizing:border-box;
-  }
-  .title{font-size:24px; line-height:32px; font-weight:700; color:var(--neutral-900);}
-  .subtitle{font-size:18px; line-height:28px; font-weight:700;}
-  .body{font-size:16px; line-height:24px; color:var(--neutral-700);}
-  .muted{color:var(--neutral-500);}
-  .badge{display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--neutral-200); background:#fff; color:var(--neutral-700);}
-  .divider{height:1px; background:var(--neutral-200); margin:8px 0;}
-  .card{
-    background:#fff; border:1px solid var(--neutral-200); border-radius:16px;
-    padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04);
-  }
-  .row{display:flex; gap:12px; align-items:center;}
-  .col{display:flex; flex-direction:column; gap:8px;}
-  .label{font-size:12px; line-height:16px; color:var(--neutral-700); font-weight:600;}
-  .input, textarea, select{
-    width:100%; border:1px solid var(--neutral-200); border-radius:12px; background:#fff; padding:8px 12px; box-sizing:border-box;
-  }
-  textarea{min-height:110px; resize:vertical;}
-  .btn{
-    display:flex; align-items:center; justify-content:center;
-    height:48px; border-radius:12px; padding:0 16px; font-size:16px; font-weight:600; text-decoration:none; cursor:pointer;
-  }
-  .btn.primary{background:var(--primary-500); color:#fff; border:1px solid var(--primary-500);}
-  .btn.secondary{background:#fff; color:var(--primary-500); border:1px solid var(--primary-500);}
-  .btn.ghost{background:transparent; color:var(--neutral-700); border:1px dashed var(--neutral-300);}
-  .sticky-actions{margin-top:auto; display:flex; flex-direction:column; gap:12px;}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PocketSaviour – Task 12: Moderate Disputes</title>
 
-  .dispute-item{
-    border:1px solid var(--neutral-200); border-radius:16px; padding:12px; background:#fff;
-    display:flex; gap:12px; align-items:flex-start;
-  }
-  .avatar{width:40px; height:40px; border-radius:20px; background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
-  .small{font-size:12px; color:var(--neutral-500);}
-  .evidence-grid{display:flex; gap:12px; flex-wrap:wrap;}
-  .evidence-tile{
-    width:110px; height:110px; border:1px solid var(--neutral-200); border-radius:16px;
-    background:linear-gradient(135deg,#eff6ff,#e2e8f0);
-    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; text-align:center;
-  }
-  .chips{display:flex; flex-wrap:wrap; gap:8px;}
-  .chip{
-    display:inline-flex; align-items:center; height:36px; padding:0 16px;
-    border-radius:18px; border:1px solid var(--neutral-300); background:#fff; font-weight:600; color:var(--neutral-700);
-    cursor:pointer; user-select:none;
-  }
-  .chip.active{border-color:var(--primary-500); box-shadow:0 0 0 2px rgba(37,99,235,.2) inset; color:var(--primary-500);}
-  .chat-bubble{
-    background:#fff; border:1px solid var(--neutral-200); border-radius:16px; padding:12px;
-  }
-  .status{display:inline-flex; gap:6px; align-items:center; font-size:12px;}
-  .status.pending{color:var(--warning-500);}
-  .status.ok{color:var(--success-500);}
-</style>
-<script>
-  function go(id){ const el=document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); } return false; }
+  <link rel="stylesheet" href="../styles/tokens.css" />
+  <link rel="stylesheet" href="../styles/base.css" />
+  <link rel="stylesheet" href="../styles/components.css" />
+  <link rel="stylesheet" href="../styles/task12.css" />
+</head>
+<body>
+  <div class="app-frame">
+    <main id="app" aria-live="polite"></main>
+  </div>
+
+  <script type="module">
+    import { createRouter } from "../js/router.js";
+    import {
+      Task12Context,
+      Task12OpenCases,
+      Task12ClaimDetails,
+      Task12ContactParties,
+      Task12EvaluateResolution,
+      Task12NotifyUsers
+    } from "../js/screens/task12.js";
+
+    const mount = (html) => {
+      document.getElementById("app").innerHTML = html;
+    };
+
+    const router = createRouter({
+      routes: {
+        "#/home": () => router.navigate("#/task12/context"),
+        "#/task12": () => router.navigate("#/task12/context"),
+        "#/task12/context": () => Task12Context({ mount, router }),
+        "#/task12/cases": () => Task12OpenCases({ mount, router }),
+        "#/task12/details": () => Task12ClaimDetails({ mount, router }),
+        "#/task12/contact": () => Task12ContactParties({ mount, router }),
+        "#/task12/evaluate": () => Task12EvaluateResolution({ mount, router }),
+        "#/task12/notify": () => Task12NotifyUsers({ mount, router })
+      },
+      onNotFound: () => router.navigate("#/task12/context")
+    });
+
+    router.start();
+  </script>
+</body>
+</html>
 
   // Demo disputes
   const DISPUTES = [

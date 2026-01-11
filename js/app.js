@@ -24,6 +24,29 @@ import {
   Task3Confirm,
   Task3Success
 } from "./screens/task3.js";
+import {
+  Task4Context,
+  Task4CaptureMedia,
+  Task4AttachToRequest,
+  Task4Clarify,
+  Task4AwaitAck
+} from "./screens/task4.js";
+import {
+  Task8Context,
+  Task8ReviewSummary,
+  Task8PushNotification,
+  Task8DecideAvailability,
+  Task8AIAdjustCalendar,
+  Task8AwaitConfirmation
+} from "./screens/task8.js";
+import {
+  Task12Context,
+  Task12OpenCases,
+  Task12ClaimDetails,
+  Task12ContactParties,
+  Task12EvaluateResolution,
+  Task12NotifyUsers
+} from "./screens/task12.js";
 
 
 
@@ -59,6 +82,29 @@ const router = createRouter({
     "#/task3/providers": () => Task3Providers({ mount, router }),
     "#/task3/confirm": () => Task3Confirm({ mount, router }),
     "#/task3/success": () => Task3Success({ mount, router }),
+
+    "#/task4": () => router.navigate("#/task4/context"),
+    "#/task4/context": () => Task4Context({ mount, router }),
+    "#/task4/capture": () => Task4CaptureMedia({ mount, router }),
+    "#/task4/attach": () => Task4AttachToRequest({ mount, router }),
+    "#/task4/clarify": () => Task4Clarify({ mount, router }),
+    "#/task4/await": () => Task4AwaitAck({ mount, router }),
+
+    "#/task8": () => router.navigate("#/task8/context"),
+    "#/task8/context": () => Task8Context({ mount, router }),
+    "#/task8/review": () => Task8ReviewSummary({ mount, router }),
+    "#/task8/notification": () => Task8PushNotification({ mount, router }),
+    "#/task8/availability": () => Task8DecideAvailability({ mount, router }),
+    "#/task8/calendar": () => Task8AIAdjustCalendar({ mount, router }),
+    "#/task8/await": () => Task8AwaitConfirmation({ mount, router }),
+
+    "#/task12": () => router.navigate("#/task12/context"),
+    "#/task12/context": () => Task12Context({ mount, router }),
+    "#/task12/cases": () => Task12OpenCases({ mount, router }),
+    "#/task12/details": () => Task12ClaimDetails({ mount, router }),
+    "#/task12/contact": () => Task12ContactParties({ mount, router }),
+    "#/task12/evaluate": () => Task12EvaluateResolution({ mount, router }),
+    "#/task12/notify": () => Task12NotifyUsers({ mount, router })
 
   },
   onNotFound: () => {
