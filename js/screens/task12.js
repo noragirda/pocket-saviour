@@ -40,7 +40,7 @@ function initTask12Store() {
 function header({ router }) {
   return `
     <div class="row" style="justify-content:space-between; align-items:center;">
-      <div class="title">Moderate Disputes</div>
+      <div class="title">Decision sent✅</div>
       <a href="#/home" class="btn ghost" style="height:36px; padding:0 12px; font-size:14px;">Home</a>
     </div>
   `;
@@ -65,15 +65,8 @@ export function Task12Context({ mount, router }) {
     <section class="screen">
       ${header({ router })}
       
-      <div class="card">
-        <div class="subtitle">Purpose & Motivation</div>
-        <div class="body">Resolve complaints fairly and keep the platform's reputation healthy.</div>
-        <div class="divider"></div>
-        <div class="row" style="flex-wrap:wrap; gap:8px;">
-          <span class="badge">Admin</span>
-          <span class="badge">Dispute resolution</span>
-          <span class="badge">Fairness</span>
-        </div>
+      <div class="body">
+        Resolve complaints fairly and keep the platform's reputation healthy.
       </div>
 
       <div class="card">
@@ -216,26 +209,29 @@ export function Task12ContactParties({ mount, router }) {
   mount(`
     <section class="screen">
       ${header({ router })}
+      <div class="title">Contact parties</div>
       <div class="body muted">Ask for clarifications, missing receipts, or context.</div>
 
       <div class="card">
         <div class="label">To: Complainant</div>
         <div class="chat-bubble">
           <div class="body" style="font-size:14px;">
-            <b>Admin:</b> "Hi, I need to verify the claim. Can you send..."
+            <b>Admin → Ana M.</b><br/>
+            Hello! Can you confirm the date the leak reappeared and share 1 more photo?
           </div>
         </div>
-        <textarea id="complainantMsg" placeholder="Write a message to the complainant...">${escapeHtml(task12.complainantMessage || '')}</textarea>
+        <textarea class="chat-bubble" id="complainantMsg" placeholder="Write a message to the complainant..." style="resize: none; width: 100%; box-sizing: border-box; min-height: 160px;">${escapeHtml(task12.complainantMessage || '')}</textarea>
       </div>
 
       <div class="card">
         <div class="label">To: Provider</div>
         <div class="chat-bubble">
           <div class="body" style="font-size:14px;">
-            <b>Admin:</b> "Please provide clarification on..."
+            <b>Admin → Andrei Pop – Plumbing</b><br/>
+            Please confirm what work was done and whether a redo was proposed.
           </div>
         </div>
-        <textarea id="providerMsg" placeholder="Write a message to the provider...">${escapeHtml(task12.providerMessage || '')}</textarea>
+        <textarea class="chat-bubble" id="providerMsg" placeholder="Write a message to the provider..." style="resize: none; width: 100%; box-sizing: border-box; min-height: 160px;">${escapeHtml(task12.providerMessage || '')}</textarea>
       </div>
 
       <div class="sticky-actions">
@@ -282,7 +278,7 @@ export function Task12EvaluateResolution({ mount, router }) {
         <div class="col">
           <label class="row"><input type="checkbox"> Claim filed within timeframe</label>
           <label class="row"><input type="checkbox"> Evidence supports claim</label>
-          <label class="row"><input type="checkbox"> Provider had opportunity to respond</label>
+          <label class="row"><input type="checkbox"> Provider's completion proof is attached</label>
         </div>
       </div>
 
@@ -290,7 +286,7 @@ export function Task12EvaluateResolution({ mount, router }) {
         <div class="label">Resolution</div>
         <div class="chips" id="decisionChips">
           ${decisions.map(d => `
-            <div class="chip ${task12.decision === d.value ? 'active' : ''}" data-decision="${d.value}">
+            <div class="chip selectable ${task12.decision === d.value ? 'active' : ''}" data-decision="${d.value}">
               ${escapeHtml(d.label)}
             </div>
           `).join('')}
@@ -299,7 +295,7 @@ export function Task12EvaluateResolution({ mount, router }) {
 
       <div class="card">
         <div class="label">Moderator note</div>
-        <textarea id="moderatorNote" placeholder="E.g., Client reported within 24h; photo shows issue persists; approve partial refund.">${escapeHtml(task12.moderatorNote || '')}</textarea>
+        <textarea class="chat-bubble" id="moderatorNote" placeholder="E.g., Client reported within 24h; photo shows issue persists; approve partial refund." style="resize: none; width: 100%; box-sizing: border-box; min-height: 160px;">${escapeHtml(task12.moderatorNote || '')}</textarea>
       </div>
 
       <div class="sticky-actions">
