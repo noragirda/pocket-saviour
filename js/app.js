@@ -25,6 +25,11 @@ import {
   Task3Success
 } from "./screens/task3.js";
 
+import { Task9List, Task9Proximity, Task9Adjust, Task9Confirm } from "./screens/task9.js";
+import { Task10Active, Task10Mark, Task10Proof, Task10Submitted, Task10Feedback } from "./screens/task10.js";
+import { Task11Queue, Task11Detail, Task11Docs, Task11Decision, Task11Success } from "./screens/task11.js";
+
+
 
 
 const appEl = document.getElementById("app");
@@ -59,6 +64,29 @@ const router = createRouter({
     "#/task3/providers": () => Task3Providers({ mount, router }),
     "#/task3/confirm": () => Task3Confirm({ mount, router }),
     "#/task3/success": () => Task3Success({ mount, router }),
+
+    // Task 9: Manage Appointments
+    "#/task9": () => router.navigate("#/task9/list"),
+    "#/task9/list": () => Task9List({ mount, router }),
+    "#/task9/proximity": () => Task9Proximity({ mount, router }),
+    "#/task9/adjust": () => Task9Adjust({ mount, router }),
+    "#/task9/confirm": () => Task9Confirm({ mount, router }),
+
+    // Task 10: Complete Job
+    "#/task10": () => router.navigate("#/task10/active"),
+    "#/task10/active": () => Task10Active({ mount, router }),
+    "#/task10/mark": () => Task10Mark({ mount, router }),
+    "#/task10/proof": () => Task10Proof({ mount, router }),
+    "#/task10/submitted": () => Task10Submitted({ mount, router }),
+    "#/task10/feedback": () => Task10Feedback({ mount, router }),
+
+    // Task 11: Verify Credentials
+    "#/task11": () => router.navigate("#/task11/queue"),
+    "#/task11/queue": () => Task11Queue({ mount, router }),
+    "#/task11/detail": () => Task11Detail({ mount, router }),
+    "#/task11/docs": () => Task11Docs({ mount, router }),
+    "#/task11/decision": () => Task11Decision({ mount, router }),
+    "#/task11/success": () => Task11Success({ mount, router }),
 
   },
   onNotFound: () => {

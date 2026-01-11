@@ -26,3 +26,23 @@ export const TIME_SLOTS = [
   "16:00–18:00",
 ];
 
+// mock-up data for tasks 9-11
+export const PROVIDER_APPOINTMENTS = [
+  { id: 101, client: "Ana M.", job: "Oven Repair", address: "Str. Lalelelor 14", start: "09:00", end: "10:00", distanceKm: 2.8, status: "pending", date: "Today" },
+  { id: 102, client: "Casa Verde", job: "Stove Ignition", address: "Bd. Eroilor 7", start: "10:15", end: "11:00", distanceKm: 1.2, status: "pending", date: "Today" },
+  // Conflict example: Overlaps with 102
+   { id: 103, client: "Ion P.", job: "Dishwasher Leak", address: "Str. Plopilor 23", start: "10:45", end: "11:30", distanceKm: 4.7, status: "pending", date: "Today" },
+  { id: 104, client: "Maria I.", job: "Fridge Cooling", address: "Str. Horea 5", start: "12:30", end: "13:30", distanceKm: 5.1, status: "pending", date: "Today" }
+];
+
+export const PENDING_PROVIDERS = [
+  { id: "prov_new_1", name: "Ion Pop", role: "Electrician", submittedTime: "2 hours ago", status: "pending", 
+    docs: { idFront: true, idBack: true, license: true, insurance: true },
+    issues: [] // "Insurance missing" etc.
+  },
+  { id: "prov_new_2", name: "Dan Repair SRL", role: "Appliance Tech", submittedTime: "5 hours ago", status: "pending",
+    docs: { idFront: true, idBack: true, license: true, insurance: false }, // Missing insurance
+    issues: ["Missing Insurance"] 
+  }
+];
+

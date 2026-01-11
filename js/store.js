@@ -43,7 +43,26 @@ task3: {
   selectedProviderId: null,
   notes: "",
   bookingStatus: "draft"       // draft | confirmed
-}
+},
+
+task9: {
+    sort: "time", // "time" | "distance"
+    blockedSlots: [], // e.g. ["10:00-12:00"]
+    confirmedIds: [] // IDs of appointments confirmed by provider
+  },
+  task10: {
+    currentJobId: "job_123", // The job being completed
+    status: "in_progress", // "in_progress" | "completed_site" | "submitted"
+    photos: [], // ["before_1.jpg"]
+    note: "",
+    isOfflineMode: false // To simulate the "queued" state
+  },
+  task11: {
+    selectedApplicantId: null,
+    decision: null, // "approve" | "reject"
+    reason: "",
+    processedApplicants: [] // List of IDs that have been processed
+  }
 
 
 };

@@ -26,8 +26,30 @@ export function HomeScreen({ mount }) {
         </div>
       </div>
 
+      <div class="card" style="margin-top: 16px;">
+        <div class="subtitle">Provider & Admin tasks (Phase 7)</div>
+        <div class="divider"></div>
+
+        <div class="grid">
+          <a class="card" href="#/task9" style="text-decoration:none; color:inherit;">
+            <div class="subtitle" style="font-size:16px;">Task 9</div>
+            <div class="body muted">Manage active appointments</div>
+          </a>
+
+          <a class="card" href="#/task10" style="text-decoration:none; color:inherit;">
+            <div class="subtitle" style="font-size:16px;">Task 10</div>
+            <div class="body muted">Update status & upload proof</div>
+          </a>
+
+          <a class="card" href="#/task11" style="text-decoration:none; color:inherit;">
+            <div class="subtitle" style="font-size:16px;">Task 11</div>
+            <div class="body muted">Verify provider credentials</div>
+          </a>
+        </div>
+      </div>
+
       <div class="sticky-actions">
-        <a class="btn ghost" href="#" onclick="localStorage.clear(); alert('Demo reset (cleared localStorage).'); return false;">
+        <a class="btn ghost" href="#" onclick="localStorage.clear(); alert('Demo reset (cleared localStorage).'); window.location.reload(); return false;">
           Reset demo
         </a>
       </div>
