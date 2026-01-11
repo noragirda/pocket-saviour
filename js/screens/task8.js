@@ -1,5 +1,5 @@
 import { store } from "../store.js";
-import { toast } from "../ui.js";
+import { toast, renderLoading } from "../ui.js";
 
 // Helper function for header with back button
 function header(title, backHref) {
@@ -40,34 +40,22 @@ function initTask8Store() {
 export function Task8Context({ mount, router }) {
   initTask8Store();
   
+  // Mock number of pending requests
+  const pendingRequests = 1;
+  
   mount(`
     <section class="screen">
       ${header("Task 8", "#/home")}
       <div class="title">Respond to a New Job Request</div>
       
-      <div class="card">
-        <div class="subtitle">Purpose & Motivation</div>
-        <div class="body">
-          Accept or decline an incoming service opportunity.
-          Receive intelligently prioritized recommendations based on your route, energy level, and schedule.
-        </div>
-        <div class="divider"></div>
-        <div class="row" style="flex-wrap:wrap; gap:8px;">
-          <span class="badge">Context: Provider receives notification</span>
-          <span class="badge">Starting point: Pending request</span>
-          <span class="badge">AI-assisted scheduling</span>
-        </div>
+      <div class="body">
+        Accept or decline an incoming service opportunity. Receive intelligently prioritized recommendations based on your route, energy level, and schedule.
       </div>
       
       <div class="card">
-        <div class="subtitle" style="font-size:14px;">Flow steps</div>
-        <ol class="body" style="padding-left:20px; margin:8px 0;">
-          <li>Review request summary (location, urgency, description)</li>
-          <li>Receive push notification about job fit</li>
-          <li>Decide availability / Enable Auto-Accept</li>
-          <li>AI dynamically adjusts calendar</li>
-          <li>Await confirmation from beneficiary</li>
-        </ol>
+        <div class="subtitle" style="font-size:16px;">Pending requests</div>
+        <div class="title" style="font-size:48px; color:var(--primary-500);">${pendingRequests}</div>
+        <div class="body muted">Jobs waiting for your response</div>
       </div>
       
       <div class="sticky-actions">
@@ -90,7 +78,7 @@ export function Task8ReviewSummary({ mount, router }) {
       ${header("Task 8", "#/task8/context")}
       <div class="title">New request</div>
 
-      <div class="card">
+      <div class="card selectable" id="jobCard">
         <div class="subtitle" style="font-size:14px;">Job</div>
         <div class="body"><b>${JOB_DATA.title}</b></div>
         <div class="body muted">${JOB_DATA.desc}</div>
@@ -110,6 +98,11 @@ export function Task8ReviewSummary({ mount, router }) {
     </section>
   `);
 
+  // Make card selectable
+  document.getElementById("jobCard").addEventListener("click", () => {
+    document.getElementById("jobCard").classList.toggle("selected");
+  });
+
   document.getElementById("viewNotifBtn").addEventListener("click", () => {
     router.navigate("#/task8/notification");
   });
@@ -128,7 +121,7 @@ export function Task8PushNotification({ mount, router }) {
       ${header("Task 8", "#/task8/review")}
       <div class="title">Notification</div>
 
-      <div class="notif">
+      <div class="notif selectable" id="notifCard">
         <div class="avatar"></div>
         <div class="col" style="flex:1;">
           <div class="subtitle" style="font-size:14px;">New job nearby</div>
@@ -140,7 +133,7 @@ export function Task8PushNotification({ mount, router }) {
         </div>
       </div>
 
-      <div class="card">
+      <div class="card selectable" id="whyJobCard">
         <div class="subtitle" style="font-size:14px;">Why this job?</div>
         <div class="body">AI matched this based on your schedule availability and client trust level.</div>
       </div>
@@ -151,6 +144,15 @@ export function Task8PushNotification({ mount, router }) {
       </div>
     </section>
   `);
+
+  // Make cards selectable
+  document.getElementById("notifCard").addEventListener("click", () => {
+    document.getElementById("notifCard").classList.toggle("selected");
+  });
+
+  document.getElementById("whyJobCard").addEventListener("click", () => {
+    document.getElementById("whyJobCard").classList.toggle("selected");
+  });
 
   document.getElementById("decideBtn").addEventListener("click", () => {
     router.navigate("#/task8/availability");
@@ -166,6 +168,7 @@ export function Task8DecideAvailability({ mount, router }) {
   initTask8Store();
   const autoAccept = store.get("task8.autoAccept");
   const trustFilter = store.get("task8.trustFilter");
+  const distanceFilter = store.get("task8.distanceFilter") || "≤ 2 km";
 
   mount(`
     <section class="screen">
@@ -174,28 +177,29 @@ export function Task8DecideAvailability({ mount, router }) {
       <div class="body muted">Choose if you want to take this job, and how similar jobs should be handled.</div>
 
       <div class="card">
-        <div class="subtitle" style="font-size:14px;">This job</div>
-        <div class="body">You're available in the requested slot (2–3 PM).</div>
+        <div class="label">Current slot</div>
+        <div class="body">Free: 14:00–15:00</div>
+        <div class="body muted">Job duration estimate: 35–45 minutes.</div>
       </div>
 
       <div class="card">
-        <div class="subtitle" style="font-size:14px;">Auto-Accept future jobs</div>
-        <div class="chips">
-          <div class="chip ${autoAccept ? 'active' : ''}" id="autoAcceptChip" style="cursor:pointer;">
-            Enable Auto-Accept
+        <div class="label">Auto-Accept</div>
+        <div class="row" style="align-items:center; gap:12px;">
+          <button class="chip selectable ${autoAccept ? 'active' : ''}" id="autoAcceptChip">
+            Toggle
+          </button>
+          <div class="body muted" id="autoText">
+            ${autoAccept ? 'Auto-Accept on.' : 'Auto-Accept off.'}
           </div>
         </div>
-        <div class="body muted" style="font-size:14px; margin-top:8px;" id="autoText">
-          ${autoAccept ? 'Auto-Accept enabled for high-fit jobs.' : 'Auto-Accept off.'}
-        </div>
       </div>
 
       <div class="card">
-        <div class="subtitle" style="font-size:14px;">Trust filter</div>
-        <div class="chips" id="trustChips">
-          <div class="chip ${trustFilter === 'High + Repeat' ? 'active' : ''}" data-trust="High + Repeat">High + Repeat</div>
-          <div class="chip ${trustFilter === 'Medium+' ? 'active' : ''}" data-trust="Medium+">Medium+</div>
-          <div class="chip ${trustFilter === 'All' ? 'active' : ''}" data-trust="All">All</div>
+        <div class="label">Trust / distance filter</div>
+        <div class="chips" id="filterChips">
+          <div class="chip selectable ${trustFilter === 'High + Repeat' ? 'active' : ''}" data-type="trust" data-value="High + Repeat">High + Repeat</div>
+          <div class="chip selectable ${trustFilter === 'High Trust only' ? 'active' : ''}" data-type="trust" data-value="High Trust only">High Trust only</div>
+          <div class="chip selectable ${distanceFilter === '≤ 2 km' ? 'active' : ''}" data-type="distance" data-value="≤ 2 km">≤ 2 km</div>
         </div>
       </div>
 
@@ -215,21 +219,30 @@ export function Task8DecideAvailability({ mount, router }) {
     const text = document.getElementById("autoText");
     
     chip.classList.toggle("active", newValue);
-    text.textContent = newValue ? 'Auto-Accept enabled for high-fit jobs.' : 'Auto-Accept off.';
+    text.textContent = newValue ? 'Auto-Accept on.' : 'Auto-Accept off.';
     
     toast(newValue ? "Auto-Accept enabled" : "Auto-Accept disabled", "success");
   });
 
-  // Trust filter selection
-  document.querySelectorAll("#trustChips .chip").forEach(chip => {
+  // Filter chips selection
+  document.querySelectorAll("#filterChips .chip").forEach(chip => {
     chip.addEventListener("click", () => {
-      const trust = chip.getAttribute("data-trust");
-      store.set("task8.trustFilter", trust);
+      const filterType = chip.getAttribute("data-type");
+      const filterValue = chip.getAttribute("data-value");
       
-      document.querySelectorAll("#trustChips .chip").forEach(c => c.classList.remove("active"));
-      chip.classList.add("active");
-      
-      toast(`Trust filter: ${trust}`, "info");
+      if (filterType === "trust") {
+        // Remove active from all trust chips
+        document.querySelectorAll("#filterChips .chip[data-type='trust']").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        store.set("task8.trustFilter", filterValue);
+        toast(`Trust filter: ${filterValue}`, "info");
+      } else if (filterType === "distance") {
+        // Toggle distance filter
+        chip.classList.toggle("active");
+        const isActive = chip.classList.contains("active");
+        store.set("task8.distanceFilter", isActive ? filterValue : null);
+        toast(isActive ? `Distance filter: ${filterValue}` : "Distance filter removed", "info");
+      }
     });
   });
 
@@ -245,7 +258,7 @@ export function Task8DecideAvailability({ mount, router }) {
 // AI Adjusts Calendar Screen
 export function Task8AIAdjustCalendar({ mount, router }) {
   initTask8Store();
-  const calendarAdjusted = store.get("task8.calendarAdjusted");
+  const calendarChoice = store.get("task8.calendarChoice") || null; // 'ai-adjust' or 'keep-current'
 
   mount(`
     <section class="screen">
@@ -254,7 +267,7 @@ export function Task8AIAdjustCalendar({ mount, router }) {
       <div class="body muted">We can slightly shift nearby jobs to accommodate this one.</div>
 
       <div class="card">
-        <div class="subtitle" style="font-size:14px;">Suggested adjustment</div>
+        <div class="label">Your day</div>
         <div class="body">
           <b>Before:</b><br/>
           • 13:00–14:00: Plumbing job<br/>
@@ -265,32 +278,66 @@ export function Task8AIAdjustCalendar({ mount, router }) {
           • <span style="color:var(--primary-500);"><b>14:00–15:00: Fix kitchen outlet (NEW)</b></span><br/>
           • 15:00–15:30: Inspection visit (shifted)
         </div>
+        <div class="body muted" style="margin-top:8px;">No adjustments yet.</div>
+        <div class="row" style="gap:8px; margin-top:12px; flex-wrap:wrap;">
+          <button class="chip selectable ${calendarChoice === 'ai-adjust' ? 'active' : ''}" id="aiAdjustBtn">Let AI adjust</button>
+          <button class="chip selectable ${calendarChoice === 'keep-current' ? 'active' : ''}" id="keepCurrentBtn">Keep current</button>
+        </div>
       </div>
 
       <div class="card">
-        <div class="subtitle" style="font-size:14px;">AI Action</div>
-        <div class="body muted" id="aiAdjustMsg">
-          ${calendarAdjusted ? 'AI shifted earlier slot to make room at 14:30.' : 'Ready to apply adjustment.'}
+        <div class="label">What changes</div>
+        <div class="body muted">
+          If earlier job ends at 13:40, we advance this job to 14:10 automatically.
         </div>
       </div>
 
       <div class="sticky-actions">
-        <button class="btn primary" id="applyBtn">Apply & Accept job</button>
+        <button class="btn primary" id="acceptBtn">Accept job</button>
         <button class="btn secondary" id="backBtn">Back</button>
       </div>
     </section>
   `);
 
-  document.getElementById("applyBtn").addEventListener("click", () => {
-    store.set("task8.calendarAdjusted", true);
-    store.set("task8.jobAccepted", true);
-    store.set("task8.status", "accepted");
+  // Let AI adjust button
+  document.getElementById("aiAdjustBtn").addEventListener("click", () => {
+    store.set("task8.calendarChoice", "ai-adjust");
+    document.getElementById("aiAdjustBtn").classList.add("active");
+    document.getElementById("keepCurrentBtn").classList.remove("active");
+    toast("AI will adjust your calendar", "success");
+  });
+
+  // Keep current button
+  document.getElementById("keepCurrentBtn").addEventListener("click", () => {
+    store.set("task8.calendarChoice", "keep-current");
+    document.getElementById("keepCurrentBtn").classList.add("active");
+    document.getElementById("aiAdjustBtn").classList.remove("active");
+    toast("Calendar will stay as-is", "info");
+  });
+
+  document.getElementById("acceptBtn").addEventListener("click", () => {
+    const btn = document.getElementById("acceptBtn");
+    btn.disabled = true;
+    btn.textContent = "Processing...";
     
-    toast("Calendar updated & job accepted!", "success");
+    // Show loading animation
+    mount(`
+      <section class="screen">
+        ${header("Task 8", "#/task8/availability")}
+        <div class="title">Processing your request</div>
+        ${renderLoading("Confirming job acceptance and updating calendar...")}
+      </section>
+    `);
     
+    // Wait 5 seconds before navigating
     setTimeout(() => {
+      store.set("task8.calendarAdjusted", true);
+      store.set("task8.jobAccepted", true);
+      store.set("task8.status", "accepted");
+      
+      toast("Job accepted!", "success");
       router.navigate("#/task8/await");
-    }, 500);
+    }, 5000);
   });
 
   document.getElementById("backBtn").addEventListener("click", () => {

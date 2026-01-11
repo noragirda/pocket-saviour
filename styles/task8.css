@@ -19,3 +19,28 @@
   background: linear-gradient(135deg, #dbeafe, #bfdbfe);
   flex-shrink: 0;
 }
+
+/* Selectable cards */
+.notif.selectable,
+.card.selectable {
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.notif.selectable.selected,
+.card.selectable.selected {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Selectable chips with blue border */
+.chip.selectable {
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chip.selectable.active {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  color: var(--primary-500);
+}
