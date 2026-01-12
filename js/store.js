@@ -1,10 +1,8 @@
-//Purpose of this: make it a central store for data that needs to be shared across multiple screens/components, basically a mocked storage for state management.
-// it's allowing user data to persist across screens and enabling realistic navigation, validation, confirmation, and error flows without a backend.
 const DEFAULT_STORE = {
   user: {
     name: "Mara",
     city: "Cluj-Napoca",
-    savedAddress: "Str. Memorandumului 12, Ap. 5"
+    activeRole: "client" 
   },
 
   ui: {
@@ -13,39 +11,56 @@ const DEFAULT_STORE = {
   },
 
   task1: {
-    category: null,          // e.g. "Power outage"
-    symptoms: "",            // optional details
-    urgency: null,           // "Emergency" | "Today" | "This week"
-    address: "",             // input
+    category: null,
+    symptoms: "",
+    urgency: null,
+    address: "",
     selectedProviderId: null,
-    requestStatus: "draft"   // draft | sent
+    requestStatus: "draft"
   },
   task2: {
-  problem: null,                 // e.g. "Kitchen leak"
-  filters: {
-    maxDistanceKm: 10,
-    minRating: 4.0,
-    maxVisitFee: 200
+    problem: null,
+    filters: { maxDistanceKm: 10, minRating: 4.0, maxVisitFee: 200 },
+    results: [],
+    savedProviderIds: [],
+    selectedProviderId: null,
+    messageDraft: "",
+    bookingStatus: "draft"
   },
-  results: [],                   // optional cache for last filtered results
-  savedProviderIds: [],          // must pick 2 for comparison
-  selectedProviderId: null,      // for contact / booking
-  messageDraft: "",              // mock chat message
-  bookingStatus: "draft"         // draft | confirmed
-},
-task3: {
-  appliance: null,              // "Stove", "Washing machine", etc.
-  issue: "",                    // description
-  urgency: null,               // "Today" | "This week"
-  date: "",                    // YYYY-MM-DD
-  timeSlot: "",                // "10:00–12:00"
-  address: "",                 // prefill from user
-  selectedProviderId: null,
-  notes: "",
-  bookingStatus: "draft"       // draft | confirmed
-}
+  task3: {
+    appliance: null,
+    issue: "",
+    urgency: null,
+    date: "",
+    timeSlot: "",
+    address: "",
+    selectedProviderId: null,
+    notes: "",
+    bookingStatus: "draft"
+  },
 
-
+  task5: {
+    selectedJobId: null,
+    reflection: {},
+    rating: 0,
+    feedback: "",
+    submitted: false
+  },
+  task6: {
+    selectedJobId: null,
+    complaint: "",
+    evidenceFiles: [],
+    resolution: null,
+    caseId: null
+  },
+  task7: {
+    identity: { name: "", phone: "", email: "" },
+    credentials: [],
+    services: [],
+    coverageArea: "",
+    availability: [],
+    status: "draft"
+  }
 };
 
 const KEY = "ps_store_v1";
@@ -85,7 +100,5 @@ function save(state) {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
-    // ignore storage errors in prototype
   }
 }
-
