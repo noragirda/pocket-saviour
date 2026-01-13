@@ -2,6 +2,7 @@ const DEFAULT_STORE = {
   user: {
     name: "Mara",
     city: "Cluj-Napoca",
+    savedAddress: "Str. Memorandumului 12, Ap. 5",
     activeRole: "client" 
   },
 
