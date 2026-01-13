@@ -19,39 +19,42 @@ function renderClientView(mount, user) {
     <section class="screen">
       ${renderHeader(user)}
       
-      <div class="card" onclick="window.location.hash='#/task1'" style="background:#fef2f2; border-color:#fecaca; cursor:pointer; margin-bottom:20px;">
+      <div class="subtitle" style="margin-bottom:8px;">Emergency</div>
+      <div class="card" onclick="window.location.hash='#/task1'" style="background:#fef2f2; border-color:#fecaca; cursor:pointer; margin-bottom:24px;">
         <div class="row" style="align-items:center; gap:12px;">
           <div style="font-size:24px; background:#fff; width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center;">⚡</div>
           <div class="col">
             <div class="subtitle" style="color:#991b1b;">Power Outage?</div>
-            <div class="body" style="color:#7f1d1d; font-size:14px;">Find an electrician</div>
+            <div class="body" style="color:#7f1d1d; font-size:14px;">Task 1: Request Electrician</div>
           </div>
         </div>
       </div>
 
-      <div class="subtitle" style="margin-bottom:12px;">Find Services</div>
+      <div class="subtitle" style="margin-bottom:12px;">Services (Non-Urgent)</div>
       <div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:24px;">
-        ${serviceCard("💧", "Plumbing", "#/task2")}
-        ${serviceCard("⚙️", "Appliances", "#/task3")}
+        ${serviceCard("💧", "Plumbing", "Task 2", "#/task2")}
+        ${serviceCard("⚙️", "Appliances", "Task 3", "#/task3")}
       </div>
 
       <div class="card" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color:white; border:none; margin-bottom:24px;">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div class="col">
-            <div class="subtitle" style="color:white;">Earn with us</div>
-            <div class="body" style="color:#dbeafe; font-size:13px;">Join as a provider.</div>
+            <div class="subtitle" style="color:white;">Join as Provider</div>
+            <div class="body" style="color:#dbeafe; font-size:13px;">Task 7: Registration</div>
           </div>
           <button class="btn" onclick="window.location.hash='#/task7'" style="background:white; color:#1e40af; border:none; font-size:13px; height:32px; padding:0 12px; font-weight:600;">
-            Register (Task 7)
+            Register
           </button>
         </div>
       </div>
 
-      <div class="subtitle" style="margin-bottom:12px;">My Activity</div>
+      <div class="subtitle" style="margin-bottom:12px;">Active Requests & History</div>
       <div class="card col" style="gap:0; padding:0; overflow:hidden;">
-        ${menuItem("#/task5", "⭐", "Rate Completed Job", "Review provider (Task 5)")}
+        ${menuItem("#/task4", "📷", "Share Media", "Task 4: Add details to request")}
         <div class="divider" style="margin:0;"></div>
-        ${menuItem("#/task6", "⚠️", "Report an Issue", "Get support (Task 6)")}
+        ${menuItem("#/task5", "⭐", "Rate Completed Job", "Task 5: Review provider")}
+        <div class="divider" style="margin:0;"></div>
+        ${menuItem("#/task6", "⚠️", "Report an Issue", "Task 6: Request refund")}
       </div>
     </section>
   `);
@@ -73,9 +76,18 @@ function renderProviderView(mount, user) {
         </div>
       </div>
 
-      <div class="subtitle" style="margin-bottom:12px;">Work Console</div>
+      <div class="subtitle" style="margin-bottom:12px;">Job Management</div>
       <div class="card col" style="gap:0; padding:0; overflow:hidden;">
-        <div style="padding:16px; opacity:0.5; text-align:center;"><div class="body muted">No active jobs</div></div>
+        ${menuItem("#/task8", "📩", "New Job Requests", "Task 8: Accept/Decline")}
+        <div class="divider" style="margin:0;"></div>
+        ${menuItem("#/task9", "📅", "Active Appointments", "Task 9: Daily schedule")}
+        <div class="divider" style="margin:0;"></div>
+        ${menuItem("#/task10", "📍", "Update Work Status", "Task 10: Mark complete / Proof")}
+      </div>
+
+      <div class="subtitle" style="margin:24px 0 12px 0;">Profile</div>
+      <div class="card col" style="gap:0; padding:0; overflow:hidden;">
+        ${menuItem("#/task7", "👷", "Edit Profile", "Task 7: Update skills/docs")}
       </div>
     </section>
   `);
@@ -85,11 +97,18 @@ function renderAdminView(mount, user) {
   mount(`
     <section class="screen">
       ${renderHeader(user)}
+      
       <div class="card" style="background:#334155; color:white; margin-bottom:24px;">
-        <div class="subtitle" style="color:white;">System Overview</div>
-        <div class="body" style="color:#cbd5e1;">Admin Dashboard</div>
+        <div class="subtitle" style="color:white;">Admin Workspace</div>
+        <div class="body" style="color:#cbd5e1;">Platform Health: Good</div>
       </div>
-      <div class="body muted" style="text-align:center; padding:20px;">No active admin tasks in this branch.</div>
+      
+      <div class="subtitle" style="margin-bottom:12px;">Moderation Queues</div>
+      <div class="card col" style="gap:0; padding:0; overflow:hidden;">
+        ${menuItem("#/task11", "🛡️", "Verify Credentials", "Task 11: Provider onboarding")}
+        <div class="divider" style="margin:0;"></div>
+        ${menuItem("#/task12", "⚖️", "Dispute Resolution", "Task 12: Moderate complaints")}
+      </div>
     </section>
   `);
 }
@@ -102,6 +121,13 @@ function renderHeader(user) {
   };
   const style = roleColors[user.activeRole] || roleColors.client;
 
+  // Mapping internal role names to PDF terminology
+  const roleDisplay = {
+    client: "Beneficiary",
+    provider: "Service Provider",
+    admin: "Administrator"
+  };
+
   return `
     <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:24px;">
       <div class="col" style="gap:4px;">
@@ -112,9 +138,9 @@ function renderHeader(user) {
         <div style="position:relative; display:inline-block; margin-top:4px;">
           <select onchange="window.switchRole(this.value)" 
             style="appearance:none; background:${style.bg}; color:${style.text}; border:1px solid ${style.border}; padding:6px 28px 6px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; outline:none;">
-            <option value="client" ${user.activeRole === 'client' ? 'selected' : ''}>View: Beneficiary</option>
-            <option value="provider" ${user.activeRole === 'provider' ? 'selected' : ''}>View: Provider</option>
-            <option value="admin" ${user.activeRole === 'admin' ? 'selected' : ''}>View: Admin</option>
+            <option value="client" ${user.activeRole === 'client' ? 'selected' : ''}>View: ${roleDisplay.client}</option>
+            <option value="provider" ${user.activeRole === 'provider' ? 'selected' : ''}>View: ${roleDisplay.provider}</option>
+            <option value="admin" ${user.activeRole === 'admin' ? 'selected' : ''}>View: ${roleDisplay.admin}</option>
           </select>
           <div style="position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:10px; color:${style.text};">▼</div>
         </div>
@@ -125,10 +151,25 @@ function renderHeader(user) {
   `;
 }
 
-function serviceCard(icon, title, link) {
-  return `<div class="card col" onclick="window.location.hash='${link}'" style="align-items:center; text-align:center; padding:16px; cursor:pointer;"><div style="font-size:32px; margin-bottom:8px;">${icon}</div><div class="subtitle" style="font-size:14px;">${title}</div></div>`;
+function serviceCard(icon, title, subtitle, link) {
+  return `
+    <div class="card col" onclick="window.location.hash='${link}'" style="align-items:center; text-align:center; padding:16px; cursor:pointer;">
+      <div style="font-size:32px; margin-bottom:8px;">${icon}</div>
+      <div class="subtitle" style="font-size:14px;">${title}</div>
+      <div class="body muted" style="font-size:11px;">${subtitle}</div>
+    </div>
+  `;
 }
 
 function menuItem(href, icon, title, sub) {
-  return `<div onclick="window.location.hash='${href}'" style="padding:16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><div style="font-size:20px;">${icon}</div><div class="col" style="flex:1;"><div class="subtitle" style="font-size:14px;">${title}</div><div class="body muted" style="font-size:12px;">${sub}</div></div><div style="color:var(--neutral-400);">→</div></div>`;
+  return `
+    <div onclick="window.location.hash='${href}'" style="padding:16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <div style="font-size:20px;">${icon}</div>
+      <div class="col" style="flex:1;">
+        <div class="subtitle" style="font-size:14px;">${title}</div>
+        <div class="body muted" style="font-size:12px;">${sub}</div>
+      </div>
+      <div style="color:var(--neutral-400);">→</div>
+    </div>
+  `;
 }
