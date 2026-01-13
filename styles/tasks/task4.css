@@ -1,0 +1,119 @@
+/* Task 4 Specific Components */
+
+/* Media Grid & Tiles */
+.media-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.media-tile {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #eff6ff, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.media-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--error-500);
+  color: white;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.media-delete-btn:hover {
+  opacity: 1;
+}
+
+/* AI Tags */
+.ai-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-tag {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  color: var(--neutral-900);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* Timeline */
+.timeline {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.timeline .step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--neutral-200);
+  flex-shrink: 0;
+}
+
+.dot.active {
+  background: var(--primary-500);
+}
+
+/* Provider Pill */
+.provider-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: 999px;
+  padding: 4px 10px;
+  width: fit-content;
+}
+
+/* Status indicators */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.ok {
+  color: var(--success-500);
+}
+
+.status.wait {
+  color: var(--warning-500);
+}

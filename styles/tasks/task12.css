@@ -1,0 +1,56 @@
+/* Task 12: Moderate Disputes - Specific Components */
+
+.dispute-item {
+  border: 1px solid var(--neutral-200);
+  border-radius: 16px;
+  padding: 12px;
+  background: #fff;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  flex-shrink: 0;
+}
+
+.small {
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+.evidence-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.evidence-tile {
+  width: 110px;
+  height: 110px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #eff6ff, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.chat-bubble {
+  background: #fff;
+  border: 1px solid var(--neutral-200);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.status.pending {
+  color: var(--warning-500);
+}
