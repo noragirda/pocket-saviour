@@ -1,4 +1,3 @@
-//basically here we add the mocked data 
 export const ELECTRICIANS = [
   { id: "e1", name: "Alex Ionescu", rating: 4.9, etaMin: 25, price: "120–180 RON", distanceKm: 2.1 },
   { id: "e2", name: "Mihai Pop", rating: 4.7, etaMin: 40, price: "100–160 RON", distanceKm: 3.8 },
@@ -19,10 +18,38 @@ export const APPLIANCE_TECHNICIANS = [
 ];
 
 export const TIME_SLOTS = [
-  "08:00–10:00",
-  "10:00–12:00",
-  "12:00–14:00",
-  "14:00–16:00",
-  "16:00–18:00",
+  "08:00–10:00", "10:00–12:00", "12:00–14:00", "14:00–16:00", "16:00–18:00",
 ];
 
+export const COMPLETED_JOBS = [
+  {
+    id: "job_101",
+    title: "Fix Kitchen Outlet",
+    provider: "Ion Pop",
+    role: "Electrician",
+    date: "Yesterday",
+    price: "150 RON",
+    canRate: true,
+    canReport: true
+  },
+  {
+    id: "job_102",
+    title: "Leaking Pipe Repair",
+    provider: "Andrei Stan",
+    role: "Plumber",
+    date: "08 Oct 2025",
+    price: "200 RON",
+    canRate: false,
+    canReport: true
+  },
+  {
+    id: "job_103",
+    title: "Washing Machine Install",
+    provider: "Maria Voicu",
+    role: "Appliance Tech",
+    date: "01 Oct 2025",
+    price: "120 RON",
+    canRate: true,
+    canReport: false
+  }
+];
