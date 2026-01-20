@@ -176,7 +176,7 @@ function getLiveSection() {
   }
   // Task 10: Plumbing En Route
   if (store.get("task10.status") === "in_progress") {
-    html += activeCard("🚚 Provider En Route", "Track arrival for 'Plumbing'", "bg-blue-50", "#/task10/active");
+    html += activeCard("🚚 Provider En Route", "Track arrival", "bg-blue-50", "#/task10/active");
   }
   // Task 7: Pending Application
   if (store.get("task7.status") === "pending") {
