@@ -3,22 +3,22 @@ const DEFAULT_STORE = {
     name: "Mara",
     city: "Cluj-Napoca",
     savedAddress: "Str. Memorandumului 12, Ap. 5",
-    activeRole: "client" // client | provider | admin
+    activeRole: "client"
   },
 
   ui: {
     loading: false,
-    loadingText: ""
+    loadingText: "",
+    activeHomeTab: "services" // services | activity
   },
 
-  // --- BASE (Tasks 1, 2, 3) ---
   task1: {
     category: null,
     symptoms: "",
     urgency: null,
     address: "",
     selectedProviderId: null,
-    requestStatus: "draft"
+    requestStatus: "draft" // draft | submitted
   },
   task2: {
     problem: null,
@@ -27,7 +27,7 @@ const DEFAULT_STORE = {
     savedProviderIds: [],
     selectedProviderId: null,
     messageDraft: "",
-    bookingStatus: "draft"
+    bookingStatus: "draft" // draft | confirmed
   },
   task3: {
     appliance: null,
@@ -38,27 +38,15 @@ const DEFAULT_STORE = {
     address: "",
     selectedProviderId: null,
     notes: "",
-    bookingStatus: "draft"
+    bookingStatus: "draft" // draft | confirmed
   },
 
-  // --- COSMIN (Tasks 4, 8, 12) ---
   task4: {
     description: "",
     mediaFiles: [], 
-    uploadStatus: "idle"
+    uploadStatus: "idle",
+    status: "idle"
   },
-  task8: {
-    activeRequestId: null,
-    chatHistory: [],
-    negotiationStatus: "pending"
-  },
-  task12: {
-    selectedDisputeId: null,
-    adminNotes: "",
-    ruling: null 
-  },
-
-  // --- ADI (Tasks 5, 6, 7) ---
   task5: {
     selectedJobId: null,
     reflection: {},
@@ -82,7 +70,12 @@ const DEFAULT_STORE = {
     status: "draft"
   },
 
-  // --- PATRICIA (Tasks 9, 10, 11) ---
+  task8: {
+    activeRequestId: null,
+    chatHistory: [],
+    negotiationStatus: "pending",
+    status: "pending"
+  },
   task9: {
     pendingInvoices: [],
     selectedMethod: null,
@@ -91,12 +84,20 @@ const DEFAULT_STORE = {
   task10: {
     activeJobId: null,
     currentStatus: "en_route",
-    statusProof: [] 
+    statusProof: [],
+    status: "in_progress"
   },
+
   task11: {
     providerId: null,
     verificationSteps: { id: false, background: false, skills: false },
     approvalStatus: "pending"
+  },
+  task12: {
+    selectedDisputeId: null,
+    adminNotes: "",
+    ruling: null,
+    status: "pending"
   }
 };
 
