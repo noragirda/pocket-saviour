@@ -11,7 +11,13 @@ function header(title, backHref) {
   `;
 }
 
+// 1. Check for Status at Start
 export function Task1Context({ mount, router }) {
+  if (store.get("task1.requestStatus") === "submitted") {
+    renderStatusView(mount, router);
+    return;
+  }
+
   mount(`
     <section class="screen">
       ${header("Task 1", "#/home")}
@@ -200,6 +206,11 @@ export function Task1Providers({ mount, router }) {
 }
 
 export function Task1Confirm({ mount, router }) {
+  if (store.get("task1.requestStatus") === "submitted") {
+    renderStatusView(mount, router);
+    return;
+  }
+
   const providerId = store.get("task1.selectedProviderId");
   const provider = ELECTRICIANS.find(p => p.id === providerId);
 
@@ -254,7 +265,7 @@ export function Task1Confirm({ mount, router }) {
     `);
 
     setTimeout(() => {
-    // simulate random failure 
+      // simulate random failure 
       const fail = Math.random() < 0.15;
 
       if (fail) {
@@ -263,7 +274,7 @@ export function Task1Confirm({ mount, router }) {
         return;
       }
 
-      store.set("task1.requestStatus", "sent");
+      store.set("task1.requestStatus", "submitted");
       toast("Request sent ✅", "success");
 
       mount(`
@@ -279,7 +290,7 @@ export function Task1Confirm({ mount, router }) {
 
           <div class="sticky-actions">
             <button class="btn secondary" id="chat">Open chat (demo)</button>
-            <a class="btn primary" href="#/home">Done</a>
+            <button class="btn primary" id="finish">Dashboard</button>
           </div>
         </section>
       `);
@@ -287,7 +298,57 @@ export function Task1Confirm({ mount, router }) {
       document.getElementById("chat").onclick = () => {
         toast("Chat is mocked (Phase 7).", "info");
       };
+
+      document.getElementById("finish").onclick = () => {
+        store.set("ui.activeHomeTab", "activity"); 
+        router.navigate("#/home");
+      };
     }, 1200);
+  };
+}
+
+// 7. NEW: Read-Only Status View
+function renderStatusView(mount, router) {
+  const providerId = store.get("task1.selectedProviderId");
+  const provider = ELECTRICIANS.find(p => p.id === providerId) || { name: "Provider", etaMin: 15 };
+
+  mount(`
+    <section class="screen">
+      <div class="row" style="justify-content:space-between;">
+        <span class="badge" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca;">Live Emergency</span>
+        <button class="btn ghost" id="home" style="height:32px; padding:0 8px;">✕</button>
+      </div>
+
+      <div class="title" style="margin-bottom:8px;">Technician En Route</div>
+      <div class="body muted">Do not panic. Help is on the way.</div>
+
+      <div class="card" style="text-align:center; margin-top:24px; padding:32px 16px;">
+        <div style="font-size:40px; margin-bottom:16px;">🚚</div>
+        <div class="subtitle" style="font-size:18px;">${provider.name}</div>
+        <div class="body" style="color:#16a34a; font-weight:700; margin-top:4px;">ETA: ~${provider.etaMin} mins</div>
+        <div class="body muted">1.2km away</div>
+      </div>
+
+      <div class="card">
+        <div class="subtitle" style="font-size:16px;">Safety Reminder</div>
+        <div class="body muted">Keep the main breaker OFF until the electrician arrives.</div>
+      </div>
+
+      <div class="sticky-actions">
+        <button class="btn secondary" style="width:100%; color:red; border-color:red;" id="cancel">Cancel Request</button>
+      </div>
+    </section>
+  `);
+
+  document.getElementById("home").onclick = () => router.navigate("#/home");
+
+  document.getElementById("cancel").onclick = () => {
+    if(confirm("Are you sure you want to cancel?")) {
+      store.set("task1.requestStatus", "draft");
+      store.set("ui.activeHomeTab", "services");
+      toast("Request cancelled.");
+      router.navigate("#/home");
+    }
   };
 }
 

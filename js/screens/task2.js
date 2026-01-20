@@ -13,6 +13,11 @@ function header(title, backHref) {
 }
 
 export function Task2Context({ mount, router }) {
+  if (store.get("task2.bookingStatus") === "confirmed") {
+    renderStatusView(mount, router);
+    return;
+  }
+
   mount(`
     <section class="screen">
       ${header("Task 2", "#/home")}
@@ -372,11 +377,64 @@ export function Task2Confirm({ mount, router }) {
           <div class="body muted">Prototype confirmation screen.</div>
 
           <div class="sticky-actions">
-            <a class="btn primary" href="#/home">Done</a>
+            <button class="btn primary" id="finish">Dashboard</button>
           </div>
         </section>
       `);
+
+      document.getElementById("finish").onclick = () => {
+        store.set("ui.activeHomeTab", "activity"); 
+        router.navigate("#/home");
+      };
     }, 900);
+  };
+}
+
+// 7. Read-Only Status View
+function renderStatusView(mount, router) {
+  const pid = store.get("task2.selectedProviderId");
+  const provider = PLUMBERS.find(p => p.id === pid) || { name: "Plumber" };
+
+  mount(`
+    <section class="screen">
+      <div class="row" style="justify-content:space-between;">
+        <span class="badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">Confirmed Booking</span>
+        <button class="btn ghost" id="close" style="height:32px; padding:0 8px;">✕</button>
+      </div>
+
+      <div class="title">Plumber Scheduled</div>
+      
+      <div class="card" style="text-align:center; margin-top:24px; padding:32px 16px;">
+        <div style="font-size:40px; margin-bottom:16px;">📅</div>
+        <div class="subtitle" style="font-size:18px;">${provider.name}</div>
+        <div class="body" style="color:#1e40af; font-weight:700; margin-top:4px;">Wednesday, 14:00</div>
+        <div class="body muted">Visit Fee: ${provider.visitFee} RON</div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <span class="body muted">Issue</span>
+          <span class="body">${store.get("task2.problem")}</span>
+        </div>
+        <div class="divider"></div>
+        <button class="btn secondary" style="width:100%;">Message Provider</button>
+      </div>
+
+      <div class="sticky-actions">
+        <button class="btn secondary" id="cancel" style="color:red; border-color:red; width:100%;">Cancel Appointment</button>
+      </div>
+    </section>
+  `);
+
+  document.getElementById("close").onclick = () => router.navigate("#/home");
+  
+  document.getElementById("cancel").onclick = () => {
+    if(confirm("Are you sure you want to cancel this appointment?")) {
+      store.set("task2.bookingStatus", "draft");
+      store.set("ui.activeHomeTab", "services");
+      toast("Booking cancelled.");
+      router.navigate("#/home");
+    }
   };
 }
 

@@ -4,14 +4,19 @@ import { APPLIANCE_TECHNICIANS, TIME_SLOTS } from "../../data/mock-db.js";
 
 function header(title, backHref) {
   return `
-    <div class="row" style="justify-content:space-between;">
-      <a class="btn ghost" href="${backHref}" style="height:40px;padding:0 12px;">← Back</a>
+    <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <a href="${backHref}" style="text-decoration:none; font-size:20px; margin-right:16px; color:var(--neutral-600);">← Back</a>
       <span class="badge">${title}</span>
     </div>
   `;
 }
 
 export function Task3Context({ mount, router }) {
+  if (store.get("task3.bookingStatus") === "confirmed") {
+    renderStatusView(mount, router);
+    return;
+  }
+
   mount(`
     <section class="screen">
       ${header("Task 3", "#/home")}
@@ -242,6 +247,11 @@ export function Task3Providers({ mount, router }) {
 }
 
 export function Task3Confirm({ mount, router }) {
+  if (store.get("task3.bookingStatus") === "confirmed") {
+    renderStatusView(mount, router);
+    return;
+  }
+
   const providerId = store.get("task3.selectedProviderId");
   const tech = APPLIANCE_TECHNICIANS.find(t => t.id === providerId);
 
@@ -317,27 +327,64 @@ export function Task3Confirm({ mount, router }) {
   };
 }
 
-export function Task3Success({ mount }) {
+export function Task3Success({ mount, router }) {
   mount(`
-    <section class="screen">
-      ${header("Task 3", "#/home")}
-      <div class="title">Visit scheduled</div>
-      <div class="body muted">This is a prototype success screen.</div>
+    <section class="screen" style="text-align:center; justify-content:center; align-items:center;">
+      <div style="font-size:48px; margin-bottom:16px;">🎉</div>
+      <div class="title">Visit Scheduled</div>
+      <div class="body muted">Your appointment is confirmed.</div>
 
-      <div class="card">
+      <div class="card" style="width:100%; text-align:left; margin-top:24px;">
         <div class="subtitle" style="font-size:16px;">Summary</div>
         <div class="body"><b>Appliance:</b> ${escapeHtml(store.get("task3.appliance"))}</div>
         <div class="body"><b>Date:</b> ${escapeHtml(store.get("task3.date"))}</div>
         <div class="body"><b>Slot:</b> ${escapeHtml(store.get("task3.timeSlot"))}</div>
       </div>
 
-      <div class="sticky-actions">
-        <a class="btn primary" href="#/home">Done</a>
+      <div class="sticky-actions" style="width:100%;">
+        <button class="btn primary" id="finish">Dashboard</button>
       </div>
     </section>
   `);
+
+  document.getElementById("finish").onclick = () => {
+    store.set("ui.activeHomeTab", "activity"); 
+    router.navigate("#/home");
+  };
 }
 
+function renderStatusView(mount, router) {
+  mount(`
+    <section class="screen">
+      <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <span class="badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">Scheduled</span>
+        <button class="btn ghost" id="close" style="height:32px; padding:0 8px;">✕</button>
+      </div>
+
+      <div class="title">Technician Visit</div>
+      <div class="card">
+        <div class="subtitle">Washing Machine Repair</div>
+        <div class="body">Friday, 10:00 - 12:00</div>
+        <div class="divider"></div>
+        <div class="body muted">Technician: Ioana Rusu</div>
+      </div>
+
+      <div class="sticky-actions">
+        <button class="btn secondary" id="cancel" style="color:red; border-color:red;">Cancel Visit</button>
+      </div>
+    </section>
+  `);
+
+  document.getElementById("close").onclick = () => router.navigate("#/home");
+  document.getElementById("cancel").onclick = () => {
+    if(confirm("Cancel this visit?")) {
+      store.set("task3.bookingStatus", "draft");
+      store.set("ui.activeHomeTab", "services");
+      toast("Visit cancelled.");
+      router.navigate("#/home");
+    }
+  };
+}
 
 function chip(label, selected) {
   const pressed = selected === label ? "true" : "false";
