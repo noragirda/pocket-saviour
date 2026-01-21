@@ -285,19 +285,14 @@ export function Task1Confirm({ mount, router }) {
 
           <div class="card">
             <div class="subtitle" style="font-size:16px;">Next</div>
-            <div class="body">You can open chat or return home.</div>
+            <div class="body">Return to the dashboard to track status.</div>
           </div>
 
           <div class="sticky-actions">
-            <button class="btn secondary" id="chat">Open chat (demo)</button>
             <button class="btn primary" id="finish">Dashboard</button>
           </div>
         </section>
       `);
-
-      document.getElementById("chat").onclick = () => {
-        toast("Chat is mocked (Phase 7).", "info");
-      };
 
       document.getElementById("finish").onclick = () => {
         store.set("ui.activeHomeTab", "activity"); 
