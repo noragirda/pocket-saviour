@@ -175,9 +175,9 @@ function getLiveSection() {
     html += activeCard("⚡ Emergency Active", "Electrician requested. ETA 15 mins.", "bg-red-50", "#/task1/confirm");
   }
   // Task 10: Plumbing En Route
-  if (store.get("task10.status") === "in_progress") {
-    html += activeCard("🚚 Provider En Route", "Track arrival", "bg-blue-50", "#/task10/active");
-  }
+  // if (store.get("task10.status") === "in_progress") {
+  //   html += activeCard("🚚 Provider En Route", "Track arrival", "bg-blue-50", "#/task10/active");
+  // }
   // Task 7: Pending Application
   if (store.get("task7.status") === "pending") {
     html += activeCard("👷 Provider App", "Submitted - Pending Verification", "bg-gray-50", "#/task7/success");
