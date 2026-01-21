@@ -3,7 +3,11 @@ import { toast, renderLoading, required } from "../ui.js";
 import { COMPLETED_JOBS } from "../../data/mock-db.js";
 
 export function Task5JobList({ mount, router }) {
-  const jobs = COMPLETED_JOBS.filter(j => j.canRate);
+  // Retrieve list of IDs user has already rated
+  const ratedIds = store.get("task5.ratedJobIds") || [];
+  
+  // Filter: show only jobs that can be rated AND haven't been rated yet
+  const jobs = COMPLETED_JOBS.filter(j => j.canRate && !ratedIds.includes(j.id));
 
   mount(`
     <section class="screen">
@@ -12,7 +16,9 @@ export function Task5JobList({ mount, router }) {
       <div class="body muted">Select a recently completed service to review.</div>
 
       <div class="grid">
-        ${jobs.length === 0 ? `<div class="card body muted">No jobs available to rate.</div>` : jobs.map(jobCard).join("")}
+        ${jobs.length === 0 
+          ? `<div class="card body muted" style="text-align:center; padding:40px;">No pending reviews. All caught up!</div>` 
+          : jobs.map(jobCard).join("")}
       </div>
 
       <div class="sticky-actions">
@@ -161,6 +167,25 @@ export function Task5Success({ mount, router }) {
   const rating = store.get("task5.rating");
   const job = getSelectedJob();
 
+  // 1. Mark this specific job as rated
+  const id = store.get("task5.selectedJobId");
+  let ratedIds = store.get("task5.ratedJobIds") || [];
+  
+  if (id && !ratedIds.includes(id)) {
+    ratedIds.push(id);
+    store.set("task5.ratedJobIds", ratedIds);
+  }
+  
+  // 2. INTELLIGENT STATUS UPDATE:
+  // Check if there are ANY remaining unrated jobs in the database.
+  // If yes -> set submitted = false (keeps card visible).
+  // If no -> set submitted = true (hides card).
+  
+  const allRateable = COMPLETED_JOBS.filter(j => j.canRate);
+  const allDone = allRateable.every(j => ratedIds.includes(j.id));
+  
+  store.set("task5.submitted", allDone);
+
   mount(`
     <section class="screen" style="text-align:center; align-items:center; justify-content:center;">
       <div style="font-size:48px; margin-bottom:16px;">🎉</div>
@@ -177,7 +202,11 @@ export function Task5Success({ mount, router }) {
       </div>
 
       <div class="sticky-actions" style="width:100%">
-        <a class="btn primary" href="#/home">Done</a>
+        ${!allDone 
+          ? `<a class="btn primary" href="#/task5">Rate Next Job</a>` 
+          : `<div class="body muted" style="margin-bottom:12px;">All jobs reviewed!</div>`
+        }
+        <a class="btn secondary" href="#/home">Back to Home</a>
       </div>
     </section>
   `);
