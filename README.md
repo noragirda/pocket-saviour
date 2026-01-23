@@ -55,3 +55,9 @@ The prototype is **UI-focused and UX-focused**, working entirely with **mocked d
 │   └── task12.css         # Specific styles for Admin Disputes
 │
 └── README.md              # This file
+
+Developer Commands:
+Shift + R = Reset the state of the app to the initial one
+Shift + 1 = Client View
+Shift + 2 = Provider View
+Shift + 3 = Admin View
