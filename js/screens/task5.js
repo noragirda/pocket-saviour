@@ -3,10 +3,8 @@ import { toast, renderLoading, required } from "../ui.js";
 import { COMPLETED_JOBS } from "../../data/mock-db.js";
 
 export function Task5JobList({ mount, router }) {
-  // Retrieve list of IDs user has already rated
   const ratedIds = store.get("task5.ratedJobIds") || [];
   
-  // Filter: show only jobs that can be rated AND haven't been rated yet
   const jobs = COMPLETED_JOBS.filter(j => j.canRate && !ratedIds.includes(j.id));
 
   mount(`
@@ -167,7 +165,6 @@ export function Task5Success({ mount, router }) {
   const rating = store.get("task5.rating");
   const job = getSelectedJob();
 
-  // 1. Mark this specific job as rated
   const id = store.get("task5.selectedJobId");
   let ratedIds = store.get("task5.ratedJobIds") || [];
   
@@ -175,11 +172,6 @@ export function Task5Success({ mount, router }) {
     ratedIds.push(id);
     store.set("task5.ratedJobIds", ratedIds);
   }
-  
-  // 2. INTELLIGENT STATUS UPDATE:
-  // Check if there are ANY remaining unrated jobs in the database.
-  // If yes -> set submitted = false (keeps card visible).
-  // If no -> set submitted = true (hides card).
   
   const allRateable = COMPLETED_JOBS.filter(j => j.canRate);
   const allDone = allRateable.every(j => ratedIds.includes(j.id));
